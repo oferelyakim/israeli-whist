@@ -1,0 +1,77 @@
+/* ===== Drum Picker (Android alarm-style scroll picker) ===== */
+
+.drum-picker {
+  width: 80px;
+  height: 300px; /* 5 items × 60px */
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.1));
+  touch-action: none;
+}
+
+.drum-picker-viewport {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Center highlight bar */
+.drum-picker-highlight {
+  position: absolute;
+  top: 50%;
+  left: 4px;
+  right: 4px;
+  height: 60px;
+  transform: translateY(-50%);
+  border: 2px solid var(--accent, #4fc3f7);
+  border-radius: 8px;
+  pointer-events: none;
+  background: rgba(79, 195, 247, 0.1);
+  z-index: 2;
+}
+
+/* Items */
+.drum-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  cursor: pointer;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.drum-item-active {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.drum-item-adjacent {
+  opacity: 0.4;
+  transform: scale(0.85);
+}
+
+.drum-item-far {
+  opacity: 0.15;
+  transform: scale(0.7);
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .drum-picker {
+    width: 64px;
+    height: 240px;
+  }
+
+  .drum-picker-highlight {
+    height: 48px;
+  }
+
+  .drum-item {
+    height: 48px !important;
+    font-size: 26px;
+  }
+}

@@ -1,0 +1,860 @@
+/* ─── Table ──────────────────────────────────────────────────── */
+
+.sol-table {
+  width: 100%;
+  height: 100vh;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-main, 'Segoe UI', sans-serif);
+  color: #fff;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ─── Top bar ────────────────────────────────────────────────── */
+
+.sol-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  min-height: 32px;
+  flex-shrink: 0;
+}
+
+.sol-moves {
+  font-size: 14px;
+  color: #ccc;
+}
+
+.sol-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────── */
+
+.sol-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  padding: 5px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.3;
+  transition: background 0.15s;
+}
+
+.sol-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.sol-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sol-btn-back {
+  font-size: 12px;
+}
+
+.sol-btn-primary {
+  background: #2196f3;
+  border-color: #1976d2;
+}
+
+.sol-btn-primary:hover {
+  background: #1e88e5;
+}
+
+.sol-btn-auto {
+  background: #43a047;
+  border-color: #388e3c;
+  font-weight: bold;
+  padding: 8px 24px;
+}
+
+.sol-btn-auto:hover:not(:disabled) {
+  background: #4caf50;
+}
+
+/* ─── Top area (stock/waste + foundations) ────────────────────── */
+
+.sol-top-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 6px 12px 4px;
+  flex-shrink: 0;
+  margin-bottom: 12px;
+}
+
+.sol-stock-waste {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.sol-foundations-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ─── Stock ──────────────────────────────────────────────────── */
+
+.sol-stock {
+  cursor: pointer;
+  position: relative;
+}
+
+.sol-stock-count {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 11px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+/* ─── Empty slot ─────────────────────────────────────────────── */
+
+.sol-empty-slot {
+  width: var(--card-width, 70px);
+  height: var(--card-height, 100px);
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sol-recycle {
+  font-size: 32px;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+}
+
+.sol-recycle:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.sol-foundation-empty {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.sol-foundation-suit {
+  font-size: 28px;
+  opacity: 0.3;
+}
+
+.sol-column-empty {
+  border-color: rgba(255, 255, 255, 0.15);
+  min-height: 100px;
+}
+
+/* ─── Waste ──────────────────────────────────────────────────── */
+
+.sol-waste {
+  display: flex;
+  align-items: flex-start;
+  min-width: 70px;
+}
+
+.sol-waste-card {
+  flex-shrink: 0;
+  position: relative;
+}
+
+.sol-waste-buried {
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+/* ─── Foundations ─────────────────────────────────────────────── */
+
+.sol-foundations {
+  display: flex;
+  gap: 6px;
+}
+
+.sol-foundation {
+  cursor: pointer;
+}
+
+@keyframes sol-card-place {
+  from { transform: scale(0.85); opacity: 0.6; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.sol-foundation .sol-card-wrapper {
+  animation: sol-card-place 0.25s ease-out;
+}
+
+/* ─── Joker indicator ────────────────────────────────────────── */
+
+.sol-joker-indicator {
+  background: rgba(255, 215, 0, 0.2);
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: fixed;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  border-radius: 10px;
+  padding: 4px 10px 2px;
+  gap: 1px;
+}
+
+.sol-joker-indicator:hover {
+  background: rgba(255, 215, 0, 0.35);
+}
+
+.sol-joker-indicator.sol-selected {
+  background: rgba(255, 215, 0, 0.5);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+}
+
+.sol-joker-star {
+  font-size: 22px;
+  color: #ffd700;
+}
+
+.sol-joker-label {
+  font-size: 9px;
+  color: #ffd700;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* ─── Tableau ────────────────────────────────────────────────── */
+
+.sol-tableau {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  flex: 1;
+  overflow-y: auto;
+  align-items: flex-start;
+}
+
+.sol-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 120px;
+  padding-top: 4px;
+}
+
+.sol-tableau-card {
+  width: var(--card-width, 70px);
+  position: relative;
+}
+
+.sol-tableau-facedown {
+  margin-top: -82px;
+}
+
+.sol-tableau-facedown:first-child {
+  margin-top: 0;
+}
+
+.sol-tableau-faceup {
+  margin-top: -72px;
+}
+
+.sol-tableau-faceup:first-child,
+.sol-tableau-facedown + .sol-tableau-faceup {
+  margin-top: -72px;
+}
+
+.sol-column > .sol-tableau-card:first-child {
+  margin-top: 0;
+}
+
+/* ─── Card wrapper states ────────────────────────────────────── */
+
+.sol-card-wrapper {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.sol-selected .card {
+  box-shadow: 0 0 0 3px #4fc3f7, 0 4px 16px rgba(79, 195, 247, 0.4);
+  transform: translateY(-4px);
+}
+
+.sol-hint-glow .card {
+  box-shadow: 0 0 12px 4px #ffd700, 0 0 4px 2px #ffd700;
+  animation: sol-hint-pulse 1s ease-in-out infinite;
+}
+
+@keyframes sol-hint-pulse {
+  0%, 100% { box-shadow: 0 0 12px 4px #ffd700, 0 0 4px 2px #ffd700; }
+  50% { box-shadow: 0 0 20px 6px #ffd700, 0 0 8px 3px #ffd700; }
+}
+
+/* ─── Hint target (destination) green glow ───────────────────── */
+
+.sol-hint-target > .sol-card-wrapper .card,
+.sol-hint-target > .sol-empty-slot {
+  box-shadow: 0 0 12px 4px #4caf50, 0 0 4px 2px #4caf50 !important;
+  animation: sol-hint-target-pulse 1s ease-in-out infinite;
+}
+
+.sol-hint-target.sol-stock .card,
+.sol-hint-target.sol-stock .sol-empty-slot {
+  box-shadow: 0 0 12px 4px #4caf50, 0 0 4px 2px #4caf50 !important;
+  animation: sol-hint-target-pulse 1s ease-in-out infinite;
+}
+
+.sol-hint-target.sol-column > .sol-tableau-card:last-child .card {
+  box-shadow: 0 0 12px 4px #4caf50, 0 0 4px 2px #4caf50 !important;
+  animation: sol-hint-target-pulse 1s ease-in-out infinite;
+}
+
+.sol-hint-target.sol-column > .sol-empty-slot {
+  box-shadow: 0 0 12px 4px #4caf50, 0 0 4px 2px #4caf50 !important;
+  animation: sol-hint-target-pulse 1s ease-in-out infinite;
+}
+
+@keyframes sol-hint-target-pulse {
+  0%, 100% { box-shadow: 0 0 12px 4px #4caf50, 0 0 4px 2px #4caf50 !important; }
+  50% { box-shadow: 0 0 20px 6px #4caf50, 0 0 8px 3px #4caf50 !important; }
+}
+
+/* ─── Drag & drop ────────────────────────────────────────────── */
+
+.sol-dragging {
+  opacity: 0.35;
+  transition: opacity 0.15s ease;
+}
+
+.sol-column.sol-drag-over {
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 2px rgba(76, 175, 80, 0.6), 0 0 12px rgba(76, 175, 80, 0.3);
+}
+
+.sol-foundation.sol-drag-over .sol-empty-slot,
+.sol-foundation.sol-drag-over .sol-card-wrapper .card {
+  box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.7), 0 0 12px rgba(79, 195, 247, 0.3);
+}
+
+.sol-card-wrapper[draggable="true"] {
+  cursor: grab;
+}
+
+.sol-card-wrapper[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+/* ─── Touch drag ─────────────────────────────────────────── */
+
+.sol-touch-clone {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.85;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+}
+
+.sol-touch-active {
+  touch-action: none;
+}
+
+/* ─── Shake animation (no valid move) ─────────────────────────── */
+
+@keyframes sol-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.sol-shake .card {
+  animation: sol-shake 0.4s ease-in-out;
+}
+
+/* ─── Reshuffle button (fixed bottom-right) ───────────────────── */
+
+.sol-btn-reshuffle {
+  position: fixed;
+  bottom: 8px;
+  right: 10px;
+  z-index: 50;
+  border-radius: 10px;
+  font-size: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px 2px;
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sol-reshuffle-label {
+  font-size: 9px;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.sol-btn-reshuffle:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ─── Settings button (fixed bottom-left) ────────────────────── */
+
+.sol-btn-settings {
+  position: fixed;
+  bottom: 8px;
+  left: 10px;
+  z-index: 50;
+  border-radius: 10px;
+  font-size: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px 2px;
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sol-btn-settings:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.sol-settings-label {
+  font-size: 9px;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* ─── Settings panel ─────────────────────────────────────────── */
+
+.sol-settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 60px;
+}
+
+.sol-settings-panel {
+  background: rgba(20, 20, 20, 0.95);
+  border-radius: 14px;
+  padding: 16px 20px;
+  min-width: 240px;
+  max-width: 320px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.sol-settings-panel h3 {
+  font-size: 13px;
+  margin: 0 0 8px;
+  color: #ccc;
+  font-weight: 600;
+}
+
+.sol-settings-panel h3:not(:first-child) {
+  margin-top: 14px;
+}
+
+.sol-settings-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sol-swatch {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.sol-swatch:hover {
+  transform: scale(1.1);
+}
+
+.sol-swatch-active {
+  border-color: #fff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}
+
+.sol-swatch-bg {
+  border-radius: 8px;
+}
+
+.sol-swatch-card {
+  border-radius: 4px;
+}
+
+/* ─── Auto-complete bar ──────────────────────────────────────── */
+
+.sol-auto-complete-bar {
+  display: flex;
+  justify-content: center;
+  padding: 8px;
+  flex-shrink: 0;
+}
+
+/* ─── Win overlay ────────────────────────────────────────────── */
+
+.sol-win-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: sol-fade-in 0.4s ease-out;
+  overflow: hidden;
+}
+
+@keyframes sol-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ─── Celebration particles ──────────────────────────────────── */
+
+.sol-win-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.sol-particle {
+  position: absolute;
+  top: -40px;
+  animation: sol-fall linear infinite;
+  opacity: 0.9;
+}
+
+@keyframes sol-fall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0.3; }
+}
+
+/* ─── Win card ───────────────────────────────────────────────── */
+
+.sol-win-card {
+  background: linear-gradient(135deg, #1b5e20, #2e7d32);
+  border-radius: 20px;
+  padding: 28px 36px;
+  text-align: center;
+  max-width: 360px;
+  width: 90%;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 60px rgba(255, 215, 0, 0.15);
+  z-index: 1;
+  animation: sol-card-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes sol-card-pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.sol-win-trophy {
+  font-size: 56px;
+  margin-bottom: 4px;
+  animation: sol-trophy-bounce 1s ease-in-out infinite alternate;
+}
+
+@keyframes sol-trophy-bounce {
+  from { transform: scale(1) rotate(-5deg); }
+  to { transform: scale(1.1) rotate(5deg); }
+}
+
+.sol-win-title {
+  font-size: 32px;
+  margin: 0 0 6px;
+  color: #ffd700;
+  text-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+}
+
+.sol-win-celeb {
+  font-size: 16px;
+  margin: 0 0 12px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.sol-win-message {
+  font-size: 14px;
+  margin: 0 0 16px;
+  color: #c8e6c9;
+}
+
+.sol-win-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.sol-btn-play-again {
+  font-size: 16px;
+  padding: 10px 28px;
+  animation: sol-glow-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes sol-glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(33, 150, 243, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(33, 150, 243, 0.7); }
+}
+
+/* ─── Leaderboard ────────────────────────────────────────────── */
+
+.sol-leaderboard {
+  margin-top: 16px;
+  text-align: left;
+}
+
+.sol-leaderboard h3 {
+  font-size: 14px;
+  margin: 0 0 8px;
+  color: #a5d6a7;
+}
+
+.sol-leaderboard-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 13px;
+}
+
+.sol-leaderboard-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.sol-leaderboard-list li:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sol-lb-current {
+  background: rgba(255, 215, 0, 0.15) !important;
+  font-weight: bold;
+  color: #ffd700;
+}
+
+.sol-lb-moves {
+  color: #fff;
+}
+
+.sol-lb-date {
+  color: #a5d6a7;
+}
+
+/* ─── Stuck dialog ──────────────────────────────────────────── */
+
+.sol-stuck-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: sol-fade-in 0.3s ease-out;
+}
+
+.sol-stuck-card {
+  background: linear-gradient(135deg, #4a1a1a, #6d2020);
+  border-radius: 16px;
+  padding: 28px 36px;
+  text-align: center;
+  max-width: 360px;
+  width: 90%;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.sol-stuck-title {
+  font-size: 22px;
+  margin: 0 0 20px;
+  color: #ffab91;
+}
+
+.sol-stuck-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ─── Reshuffle confirm modal ───────────────────────────────── */
+
+.sol-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sol-confirm-dialog {
+  background: rgba(30, 30, 30, 0.95);
+  border-radius: 14px;
+  padding: 24px 28px;
+  text-align: center;
+  max-width: 300px;
+  width: 85%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.sol-confirm-text {
+  color: #fff;
+  font-size: 15px;
+  margin: 0 0 18px;
+  line-height: 1.4;
+}
+
+.sol-confirm-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .sol-top-bar {
+    padding: 6px 10px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .sol-top-area {
+    padding: 4px 4px 2px;
+    gap: 4px;
+  }
+
+  .sol-stock-waste {
+    gap: 4px;
+  }
+
+  .sol-foundations {
+    gap: 4px;
+  }
+
+  .sol-foundations-area {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .sol-tableau {
+    gap: 2px;
+    padding: 4px 2px;
+  }
+
+  .sol-joker-indicator {
+    padding: 3px 8px 1px;
+  }
+
+  .sol-joker-star {
+    font-size: 18px;
+  }
+
+  .sol-joker-label {
+    font-size: 8px;
+  }
+
+  .sol-reshuffle-label {
+    font-size: 8px;
+  }
+
+  .sol-settings-label {
+    font-size: 8px;
+  }
+
+  .sol-tableau-facedown {
+    margin-top: -56px;
+  }
+
+  .sol-tableau-faceup {
+    margin-top: -48px;
+  }
+
+  .sol-tableau-faceup:first-child,
+  .sol-tableau-facedown + .sol-tableau-faceup {
+    margin-top: -48px;
+  }
+
+  .sol-win-card {
+    padding: 24px 20px;
+  }
+}
+
+@media (max-width: 400px) {
+  .sol-tableau {
+    gap: 1px;
+    padding: 4px 1px;
+  }
+
+  .sol-foundations {
+    gap: 3px;
+  }
+
+  .sol-stock-waste {
+    gap: 4px;
+  }
+}
+
+/* ─── Hint message toast ───────────────────────────────────── */
+
+.sol-hint-message {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: #ffd700;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 100;
+  pointer-events: none;
+  animation: sol-hint-msg-in 0.3s ease-out;
+  box-shadow: 0 2px 12px rgba(255, 215, 0, 0.3);
+  white-space: nowrap;
+}
+
+@keyframes sol-hint-msg-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}

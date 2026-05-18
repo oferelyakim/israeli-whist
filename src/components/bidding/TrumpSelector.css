@@ -1,0 +1,65 @@
+.trump-selector {
+  position: absolute;
+  bottom: 145px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 16px 24px;
+  backdrop-filter: blur(8px);
+  text-align: center;
+  z-index: 50;
+}
+
+.trump-selector h3 {
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.trump-options {
+  display: flex;
+  gap: 10px;
+}
+
+.trump-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid transparent;
+  transition: all 0.15s;
+}
+
+.trump-option:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.trump-option-red {
+  color: var(--red-suit);
+}
+
+.trump-option-red:hover {
+  border-color: var(--red-suit);
+}
+
+.trump-option-black {
+  color: #fff;
+}
+
+.trump-option-black:hover {
+  border-color: #fff;
+}
+
+.trump-symbol {
+  font-size: 32px;
+}
+
+.trump-name {
+  font-size: 12px;
+  font-weight: 600;
+}

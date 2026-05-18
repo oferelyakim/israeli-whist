@@ -1,0 +1,67 @@
+.card-fan {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.card-fan-bottom {
+  height: 130px;
+  padding-bottom: 10px;
+}
+
+.card-fan-top {
+  height: 90px;
+}
+
+.card-fan-left,
+.card-fan-right {
+  flex-direction: column;
+  width: 70px;
+}
+
+.card-fan .card {
+  position: absolute;
+  transform-origin: bottom center;
+}
+
+.card-fan-bottom .card {
+  transform-origin: bottom center;
+}
+
+.card-fan-top .card {
+  transform-origin: top center;
+}
+
+/* ===== Mobile Responsive ===== */
+@media (max-width: 768px) {
+  .card-fan-bottom {
+    height: 100px;
+    padding-bottom: 6px;
+  }
+
+  .card-fan-top {
+    height: 65px;
+  }
+
+  .card-fan-left,
+  .card-fan-right {
+    width: 50px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-fan-bottom {
+    height: 80px;
+    padding-bottom: 4px;
+  }
+
+  .card-fan-top {
+    height: 55px;
+  }
+
+  .card-fan-left,
+  .card-fan-right {
+    width: 42px;
+  }
+}

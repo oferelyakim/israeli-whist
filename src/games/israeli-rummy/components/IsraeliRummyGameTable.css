@@ -1,0 +1,1325 @@
+/* --- Israeli Rummy Game Table --- */
+
+.irummy-table {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  background:
+    radial-gradient(ellipse 120% 80% at 50% 45%, rgba(46, 125, 50, 0.0) 0%, rgba(0, 0, 0, 0.35) 95%),
+    radial-gradient(ellipse at center, #1f6a32 0%, #0e3619 100%);
+  color: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+  user-select: none;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Subtle felt texture via SVG-like noise */
+.irummy-table::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  mix-blend-mode: overlay;
+  background-image:
+    repeating-radial-gradient(circle at 25% 30%, rgba(255, 255, 255, 0.015) 0 1px, transparent 1px 3px),
+    repeating-radial-gradient(circle at 75% 70%, rgba(0, 0, 0, 0.02) 0 1px, transparent 1px 3px);
+  z-index: 0;
+}
+
+/* Ensure all children render above the felt texture */
+.irummy-table > * { position: relative; z-index: 1; }
+
+/* Override base card opacity for rummy — all cards should be fully visible */
+.irummy-table .card:not(.card-playable):not(.card-selected):not(.card-back) {
+  opacity: 1;
+}
+
+/* --- Rearranging mode indicator --- */
+
+.irummy-rearranging {
+  border: 3px solid rgba(255, 215, 0, 0.5);
+  box-shadow: inset 0 0 30px rgba(255, 215, 0, 0.08);
+}
+
+/* --- Top bar --- */
+
+.irummy-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  flex-shrink: 0;
+  min-height: 36px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.15) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  z-index: 10;
+}
+
+.irummy-top-bar-center {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* --- Buttons --- */
+
+.irummy-btn {
+  font-size: 13px;
+  padding: 5px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  backdrop-filter: blur(4px);
+  font-weight: 500;
+}
+
+.irummy-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.irummy-btn:active {
+  transform: translateY(0);
+}
+
+.irummy-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}
+
+.irummy-btn-primary {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  border-color: #1565c0;
+  box-shadow: 0 2px 6px rgba(33, 150, 243, 0.3);
+}
+
+.irummy-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%);
+  box-shadow: 0 3px 10px rgba(33, 150, 243, 0.4);
+}
+
+.irummy-btn-success {
+  background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+  border-color: #1b5e20;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(56, 142, 60, 0.3);
+  animation: irummy-btn-glow 2s ease-in-out infinite;
+}
+
+@keyframes irummy-btn-glow {
+  0%, 100% { box-shadow: 0 2px 6px rgba(56, 142, 60, 0.3); }
+  50% { box-shadow: 0 2px 12px rgba(76, 175, 80, 0.5); }
+}
+
+.irummy-btn-success:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+  box-shadow: 0 3px 12px rgba(76, 175, 80, 0.5);
+  animation: none;
+}
+
+.irummy-btn-danger {
+  background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+  border-color: #b71c1c;
+  box-shadow: 0 2px 6px rgba(198, 40, 40, 0.3);
+}
+
+.irummy-btn-danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ef5350 0%, #d32f2f 100%);
+}
+
+.irummy-btn-small {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+/* --- First meld indicator --- */
+
+.irummy-first-meld-indicator {
+  text-align: center;
+  padding: 3px 12px;
+  font-size: 12px;
+  color: #ffab40;
+  font-weight: 600;
+  background: rgba(255, 171, 64, 0.08);
+  border-radius: 12px;
+  display: inline-flex;
+  align-self: center;
+  gap: 4px;
+  border: 1px solid rgba(255, 171, 64, 0.15);
+}
+
+.irummy-first-meld-met {
+  color: #81c784;
+  background: rgba(129, 199, 132, 0.08);
+  border-color: rgba(129, 199, 132, 0.15);
+}
+
+/* --- Opponents (compact chips on sides + top) --- */
+
+.irummy-opponent-chip {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 58px;
+  max-width: 110px;
+  z-index: 15;
+  transition: box-shadow 0.3s, background 0.3s, border-color 0.3s, transform 0.3s;
+  pointer-events: auto;
+  backdrop-filter: blur(3px);
+}
+
+.irummy-opponent-top {
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  flex-direction: row;
+  gap: 10px;
+  padding: 3px 12px;
+  min-width: 0;
+  max-width: 240px;
+}
+
+.irummy-opponent-top .irummy-opponent-name {
+  max-width: 140px;
+  font-size: 12px;
+}
+
+.irummy-opponent-top .irummy-opponent-count {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.irummy-opponent-top .irummy-opponent-count-num {
+  font-size: 13px;
+}
+
+.irummy-opponent-left {
+  top: 50%;
+  left: 6px;
+  transform: translateY(-50%);
+}
+
+.irummy-opponent-right {
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+}
+
+.irummy-opponent-active {
+  box-shadow: 0 0 12px 3px rgba(255, 215, 0, 0.35);
+  background: rgba(255, 215, 0, 0.14);
+  border-color: rgba(255, 215, 0, 0.35);
+}
+
+.irummy-opponent-top.irummy-opponent-active {
+  transform: translateX(-50%) scale(1.08);
+}
+
+.irummy-opponent-left.irummy-opponent-active,
+.irummy-opponent-right.irummy-opponent-active {
+  transform: translateY(-50%) scale(1.05);
+}
+
+.irummy-opponent-name {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  max-width: 90px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.irummy-opponent-active .irummy-opponent-name {
+  color: #ffd54f;
+}
+
+.irummy-opponent-count {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.irummy-opponent-count-num {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.irummy-opponent-count-label {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.3px;
+}
+
+.irummy-opponent-first-meld {
+  font-size: 9px;
+  color: #ffab40;
+  line-height: 1;
+}
+
+.irummy-opponent-first-meld-met {
+  color: #66bb6a;
+}
+
+/* --- Turn indicator --- */
+
+.irummy-turn-indicator {
+  text-align: center;
+  padding: 6px 16px;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  font-weight: 600;
+  transition: color 0.3s, text-shadow 0.3s;
+  letter-spacing: 0.3px;
+}
+
+.irummy-turn-yours {
+  color: #ffd54f;
+  text-shadow: 0 0 20px rgba(255, 213, 79, 0.4);
+  animation: irummy-turn-pulse 2s ease-in-out infinite;
+}
+
+@keyframes irummy-turn-pulse {
+  0%, 100% { text-shadow: 0 0 10px rgba(255, 213, 79, 0.2); }
+  50% { text-shadow: 0 0 24px rgba(255, 213, 79, 0.5); }
+}
+
+/* --- Center area --- */
+
+.irummy-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 8px;
+  flex-shrink: 0;
+}
+
+.irummy-pile-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.irummy-pass-btn {
+  margin-top: 6px;
+  font-size: 13px;
+  padding: 6px 14px;
+  box-shadow: 0 0 10px rgba(255, 200, 100, 0.5);
+  animation: irummy-btn-glow 2s ease-in-out infinite;
+}
+
+.irummy-pile {
+  position: relative;
+  width: var(--card-width, 70px);
+  height: var(--card-height, 100px);
+  cursor: pointer;
+}
+
+.irummy-pile-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.irummy-empty-pile {
+  width: var(--card-width, 70px);
+  height: var(--card-height, 100px);
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.irummy-pile-label {
+  font-size: 11px;
+  color: #90caf9;
+  text-align: center;
+  font-weight: 600;
+}
+
+.irummy-pile-count {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 6px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.irummy-pile-clickable {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.irummy-pile-clickable:hover {
+  transform: scale(1.05);
+  filter: brightness(1.08);
+}
+
+.irummy-pile-highlight {
+  box-shadow: 0 0 12px 4px rgba(33, 150, 243, 0.5);
+  border-radius: 6px;
+  animation: irummy-pile-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes irummy-pile-pulse {
+  0%, 100% { box-shadow: 0 0 10px 3px rgba(33, 150, 243, 0.4); }
+  50% { box-shadow: 0 0 18px 7px rgba(33, 150, 243, 0.6); }
+}
+
+/* --- Melds on table --- */
+
+.irummy-melds-area {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  /* Core invariant: the melds area NEVER scrolls vertically. The JS sizing
+   * algorithm (computeMeldAreaSizing) guarantees every meld fits by either
+   * shrinking tiles, switching to `dense` / `compact` layouts, or dynamically
+   * lowering the tile scale floor to ~18px. If it somehow still overflows
+   * (pathologically small container), we clip and warn in dev. */
+  overflow: hidden;
+  touch-action: pan-y;
+  /* Side padding reserves a safe zone for the left/right opponent chips
+   * (.irummy-opponent-left/-right @ left/right: 6px, up to 110px wide). We
+   * reserve 140px at desktop, 100px at tablet, 24px on mobile. Mirrored in
+   * computeMeldAreaSizing's getMeldAreaSidePadding so packing math matches. */
+  padding: 4px 140px;
+  min-height: 140px;
+  /* Let the algorithm claim as much vertical space as the flex parent
+   * allocates, but don't force a minimum beyond what actually fits. */
+  min-width: 0;
+  row-gap: 6px;
+}
+
+@media (max-width: 1099px) {
+  .irummy-melds-area {
+    padding: 4px 100px;
+  }
+}
+@media (max-width: 699px) {
+  /* Narrow portrait: anchor the opponent chips under the top bar in a
+   * single compact row (name | count | status) instead of vertically
+   * centering vertical-stacked chips on the sides. This frees the full
+   * viewport width for the melds grid so wrapped rows carry more melds per
+   * row and the 3-tier meld sizing keeps tiles as large as possible. */
+  .irummy-opponent-left,
+  .irummy-opponent-right {
+    top: 44px;
+    transform: none;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    min-width: 0;
+    max-width: 44vw;
+  }
+  .irummy-opponent-left.irummy-opponent-active,
+  .irummy-opponent-right.irummy-opponent-active {
+    transform: scale(1.05);
+  }
+  .irummy-opponent-left .irummy-opponent-count,
+  .irummy-opponent-right .irummy-opponent-count {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 3px;
+  }
+  .irummy-opponent-left .irummy-opponent-name,
+  .irummy-opponent-right .irummy-opponent-name {
+    font-size: 11px;
+    max-width: 90px;
+  }
+  .irummy-opponent-left .irummy-opponent-count-num,
+  .irummy-opponent-right .irummy-opponent-count-num {
+    font-size: 12px;
+  }
+  .irummy-melds-area {
+    padding: 32px 8px 4px;
+    row-gap: 4px;
+  }
+}
+
+/* Dense layout: tighter gaps between melds so more fit per row. Triggered
+ * by the JS algorithm when rows layout can't fit even at MIN_SCALE. */
+.irummy-melds-layout-dense .irummy-melds-grid {
+  justify-content: flex-start;
+}
+.irummy-melds-layout-dense .irummy-meld {
+  padding: var(--meld-padding, 2px);
+  border-radius: 6px;
+}
+
+/* Compact layout: tightest of all. Minimal per-meld padding, smaller
+ * gaps. align-content: flex-start ensures wrapped rows don't spread
+ * vertically (important when the algorithm is fighting to keep everything
+ * visible without scrolling). */
+.irummy-melds-layout-compact .irummy-melds-grid {
+  justify-content: flex-start;
+  align-content: flex-start;
+  gap: var(--meld-gap, 2px);
+}
+.irummy-melds-layout-compact .irummy-meld {
+  padding: var(--meld-padding, 1px);
+  border-radius: 5px;
+  border-width: 1px;
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.25),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.irummy-melds-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 4px;
+}
+
+.irummy-melds-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--meld-gap, 8px);
+  justify-content: center;
+  align-content: flex-start;
+  /* Individual meld frames must not stretch — they need to stay compact so
+   * multiple fit per row. flex-wrap with no grow gives "as many as fit,
+   * wrap rest". */
+}
+
+/* During rearrange/drag, anchor rows to the start instead of center. With
+ * justify-content: center, a single meld growing wider re-centers every
+ * other meld on its row — the "whole board moves when I drop a tile"
+ * complaint. flex-start keeps the leading melds where they were and only
+ * the trailing ones near the row edge shift. */
+.irummy-melds-stable-rows .irummy-melds-grid {
+  justify-content: flex-start;
+}
+
+.irummy-melds-grid > .irummy-meld {
+  flex: 0 0 auto;
+  /* min-width: 0 lets the meld shrink below its intrinsic content width so
+   * our max-width + overflow-x takes effect for super-wide runs. */
+  min-width: 0;
+}
+
+/* On very narrow viewports a wide run (up to 13 tiles) can exceed the grid
+ * width. Cap at 100% of the container and let the meld scroll horizontally
+ * INTERNALLY rather than shrinking every tile on the board. */
+.irummy-meld {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: thin;
+}
+
+.irummy-meld {
+  display: flex;
+  gap: var(--meld-inner-gap, 2px);
+  padding: calc(var(--meld-padding, 4px) + 2px);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0.28) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 2px 3px rgba(0, 0, 0, 0.3),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+    0 1px 0 rgba(255, 255, 255, 0.03);
+  transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s, background 0.2s;
+  align-items: center;
+}
+
+.irummy-meld:hover {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.22) 100%);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Meld type visual distinction */
+.irummy-meld-type-run {
+  border-left: 3px solid rgba(100, 181, 246, 0.5);
+}
+
+.irummy-meld-type-set {
+  border-left: 3px solid rgba(255, 183, 77, 0.5);
+}
+
+.irummy-meld {
+  --card-width: var(--meld-card-w, 34px);
+  --card-height: var(--meld-card-h, 48px);
+}
+
+.irummy-meld .card {
+  font-size: var(--meld-card-font, 0.7em);
+}
+
+/* Readability floor is enforced in JS (TILE_WIDTH_FLOOR_PX = 20px, enforced
+ * when building --meld-card-w). We deliberately DO NOT repeat the floor here
+ * because a CSS min-width would fight the computed --meld-card-w on dense
+ * layouts and force horizontal overflow. */
+
+.irummy-meld-drop-target {
+  box-shadow: 0 0 16px 5px rgba(76, 175, 80, 0.6);
+  border-color: rgba(76, 175, 80, 0.7);
+  transform: scale(1.04);
+  background: rgba(76, 175, 80, 0.1);
+  transition: box-shadow 0.15s, transform 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.irummy-meld-invalid {
+  border-color: rgba(244, 67, 54, 0.6);
+  box-shadow: 0 0 8px 3px rgba(244, 67, 54, 0.3);
+  animation: irummy-invalid-pulse 1s ease-in-out infinite;
+}
+
+@keyframes irummy-invalid-pulse {
+  0%, 100% { box-shadow: 0 0 6px 2px rgba(244, 67, 54, 0.3); }
+  50% { box-shadow: 0 0 10px 4px rgba(244, 67, 54, 0.45); }
+}
+
+.irummy-meld-card {
+  position: relative;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.irummy-meld-card-draggable {
+  cursor: grab;
+  touch-action: none;
+}
+
+.irummy-meld-card-draggable:hover {
+  filter: brightness(1.12);
+  transform: translateY(-4px);
+  z-index: 2;
+}
+
+/* --- DnD: drag source faded --- */
+
+.irummy-drag-source {
+  opacity: 0.2;
+  pointer-events: none;
+  transform: scale(0.92);
+  filter: grayscale(0.5);
+}
+
+/* --- DnD: floating ghost --- */
+
+.irummy-drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 500;
+  pointer-events: none;
+  display: flex;
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.5));
+  transform-origin: center;
+}
+
+.irummy-ghost-card {
+  --card-width: 40px;
+  --card-height: 56px;
+}
+
+.irummy-ghost-card .card,
+.irummy-ghost-card .rtile {
+  font-size: 0.75em;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(33, 150, 243, 0.4);
+}
+
+/* --- DnD: melds area droppable state --- */
+
+.irummy-melds-droppable {
+  border: 2px dashed rgba(76, 175, 80, 0.3);
+  border-radius: 8px;
+  background: rgba(76, 175, 80, 0.03);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.irummy-melds-new-target {
+  border-color: rgba(76, 175, 80, 0.6);
+  background: rgba(76, 175, 80, 0.08);
+}
+
+/* --- "+ New Set" builder frame -----------------------------------------
+ * Renders ABOVE the meld grid. Shows a dashed frame; when empty, a plus
+ * icon centers in it. When the user drops tiles or a joker is released
+ * via replacement, the tiles render inline and can be dragged around.
+ * When tile count >= 3 and forms a valid meld, the frame turns green
+ * ("ready"). Replaces BOTH the old per-meld new-slot and the separate
+ * Joker Workbench banner. */
+
+.irummy-melds-new-slot {
+  flex-shrink: 0;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 10px;
+  min-height: calc(var(--meld-card-h, 48px) + 8px);
+  border-radius: 10px;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.02) 0 6px,
+      transparent 6px 12px
+    );
+  border: 2px dashed rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.55);
+  transition: border-color 0.15s, color 0.15s, background 0.15s, transform 0.15s;
+  margin-bottom: 2px;
+}
+
+.irummy-melds-new-slot-empty {
+  justify-content: center;
+  min-height: calc(var(--meld-card-h, 48px) + 8px);
+}
+
+.irummy-melds-new-slot-label {
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-weight: 700;
+  opacity: 0.8;
+  color: rgba(255, 213, 79, 0.8);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.irummy-melds-new-slot-empty .irummy-melds-new-slot-label {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.irummy-melds-new-slot-tiles {
+  display: flex;
+  gap: var(--meld-inner-gap, 2px);
+  align-items: center;
+  flex-wrap: wrap;
+  flex: 1 1 auto;
+  min-height: var(--meld-card-h, 48px);
+}
+
+.irummy-melds-new-slot-tile {
+  --card-width: var(--meld-card-w, 34px);
+  --card-height: var(--meld-card-h, 48px);
+  cursor: grab;
+  touch-action: none;
+  transition: transform 0.15s;
+}
+
+.irummy-melds-new-slot-tile:hover {
+  transform: translateY(-2px);
+  z-index: 2;
+}
+
+.irummy-melds-new-slot-tile .card {
+  font-size: var(--meld-card-font, 0.7em);
+}
+
+.irummy-new-slot-plus {
+  font-size: calc(var(--meld-card-w, 34px) * 0.9);
+  font-weight: 300;
+  line-height: 0.8;
+  opacity: 0.55;
+}
+
+/* Drop-target highlight: glowing green. */
+.irummy-melds-new-slot-drop-target {
+  border-color: rgba(76, 175, 80, 0.85);
+  color: #a5d6a7;
+  background: rgba(76, 175, 80, 0.14);
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.5), 0 4px 14px rgba(76, 175, 80, 0.3);
+}
+
+/* Invalid (tiles present but not a valid meld yet): amber tint. */
+.irummy-melds-new-slot-invalid {
+  border-color: rgba(255, 171, 64, 0.6);
+  background:
+    linear-gradient(180deg, rgba(255, 171, 64, 0.08) 0%, rgba(255, 171, 64, 0.03) 100%);
+}
+
+/* Valid (3+ tiles, passes isValidMeld): green "ready" tint. */
+.irummy-melds-new-slot-valid {
+  border-color: rgba(76, 175, 80, 0.8);
+  border-style: solid;
+  background:
+    linear-gradient(180deg, rgba(76, 175, 80, 0.15) 0%, rgba(76, 175, 80, 0.06) 100%);
+  box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.35), 0 2px 10px rgba(76, 175, 80, 0.18);
+}
+.irummy-melds-new-slot-valid .irummy-melds-new-slot-label {
+  color: #a5d6a7;
+}
+
+/* --- Working area for incomplete groups --- */
+
+.irummy-working-area {
+  background: rgba(255, 193, 7, 0.06);
+  border: 1px dashed rgba(255, 193, 7, 0.35);
+  border-radius: 10px;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+}
+
+.irummy-working-label {
+  font-size: 11px;
+  color: rgba(255, 193, 7, 0.7);
+  font-weight: 600;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.irummy-melds-empty {
+  text-align: center;
+  padding: 16px;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 13px;
+}
+
+.irummy-melds-drop-hint {
+  text-align: center;
+  padding: 16px;
+  color: rgba(76, 175, 80, 0.8);
+  font-size: 14px;
+  font-weight: 600;
+  animation: irummy-pulse-hint 1s ease-in-out infinite;
+}
+
+@keyframes irummy-pulse-hint {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* --- Sort buttons --- */
+
+.irummy-sort-buttons {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  padding: 2px 0;
+}
+
+/* --- Error message --- */
+
+.irummy-error-msg {
+  text-align: center;
+  color: #ff8a80;
+  background: rgba(198, 40, 40, 0.25);
+  border: 1px solid rgba(198, 40, 40, 0.55);
+  border-radius: 10px;
+  font-size: 13px;
+  padding: 7px 16px;
+  font-weight: 600;
+  max-width: 90%;
+  animation: irummy-shake 0.4s ease;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 14px rgba(198, 40, 40, 0.3);
+}
+
+/* When rearranging, float the error above the sticky toolbar */
+.irummy-rearranging .irummy-error-msg {
+  position: fixed;
+  left: 50%;
+  bottom: 90px;
+  transform: translateX(-50%);
+  z-index: 65;
+}
+
+@keyframes irummy-shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-5px); }
+  30% { transform: translateX(5px); }
+  45% { transform: translateX(-4px); }
+  60% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+  90% { transform: translateX(2px); }
+}
+
+/* NOTE: The old .irummy-workbench* rules were removed. Freed jokers now
+ * live in the .irummy-melds-new-slot builder frame at the top of the
+ * melds area — a single "new set" zone that accepts ALL tile drops, not
+ * just jokers. This removes a separate banner that used to steal vertical
+ * space from the melds grid and could visually overlap melds below. */
+
+@media (max-width: 600px) {
+  .irummy-melds-new-slot-tile {
+    --card-width: var(--meld-card-w, 28px);
+    --card-height: var(--meld-card-h, 40px);
+  }
+}
+
+/* --- Player area --- */
+
+.irummy-player-area {
+  flex-shrink: 0;
+  padding: 6px 10px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.08) 70%, transparent 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+}
+
+/* Make bottom area extra tall while the sticky rearrange bar is present */
+.irummy-rearranging .irummy-player-area {
+  padding-bottom: 80px;
+}
+
+.irummy-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 2px 0;
+}
+
+.irummy-hand-row {
+  --hand-card-w: 44px;
+  --hand-card-h: 62px;
+  --hand-cell-gap: 4px;
+  --card-width: var(--hand-card-w);
+  --card-height: var(--hand-card-h);
+
+  display: grid;
+  grid-template-columns: repeat(7, minmax(40px, 60px));
+  grid-auto-rows: var(--hand-card-h);
+  gap: 6px var(--hand-cell-gap);
+  justify-content: center;
+  align-content: center;
+  max-width: calc(100% - 60px);
+  padding: 10px 22px 12px;
+  margin: 4px 60px 0 0; /* Right margin to avoid reshuffle button overlap */
+  /* Wooden tile-rack look */
+  background:
+    linear-gradient(180deg,
+      #6b4a25 0%,
+      #8a6432 18%,
+      #9d7738 42%,
+      #8a6432 78%,
+      #5a3d1e 100%);
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.45);
+  box-shadow:
+    inset 0 2px 3px rgba(255, 220, 170, 0.22),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.35),
+    inset 0 0 20px rgba(0, 0, 0, 0.25),
+    0 4px 14px rgba(0, 0, 0, 0.45);
+  position: relative;
+}
+
+/* Subtle wood-grain */
+.irummy-hand-row::before {
+  content: '';
+  position: absolute;
+  inset: 4px 6px;
+  border-radius: 10px;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(0, 0, 0, 0.0) 0 3px,
+      rgba(0, 0, 0, 0.05) 3px 4px,
+      rgba(255, 255, 255, 0.02) 4px 6px,
+      rgba(0, 0, 0, 0.0) 6px 14px);
+  opacity: 0.7;
+}
+
+.irummy-hand-row > * { position: relative; z-index: 1; }
+
+/* Every grid cell (filled or empty) shares the same footprint so the 7-col
+   grid stays rigid. Filled cells nest the card inside; empty cells show a
+   dashed placeholder. */
+.irummy-hand-slot {
+  width: var(--hand-card-w);
+  height: var(--hand-card-h);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.irummy-hand-card {
+  transition: transform 0.2s ease, opacity 0.2s ease, filter 0.2s ease;
+  cursor: pointer;
+}
+
+.irummy-hand-card .card {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.irummy-hand-card:hover {
+  transform: translateY(-8px);
+  z-index: 3;
+}
+
+.irummy-hand-card:hover .card {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.irummy-hand-draggable {
+  cursor: grab;
+  touch-action: none;
+  transition: transform 0.15s ease, opacity 0.15s ease, filter 0.15s ease;
+}
+
+/* Visual gap between set groups — rendered as a subtle left border on the
+   boundary tile (instead of margin, which would break the fixed grid). */
+.irummy-hand-gap {
+  box-shadow: inset 3px 0 0 rgba(255, 213, 79, 0.35);
+}
+
+/* --- Empty placeholder slot: dashed outline, drop target only --- */
+
+.irummy-hand-empty-slot {
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.12);
+  pointer-events: none; /* not interactive — drop target via parent */
+}
+
+/* --- Slot-level drop glow (replaces the old vertical insertion bar) ---
+   Pulsing gold outline + soft shadow highlights the target slot. For a
+   multi-card drag, the glow spans N consecutive slots. */
+.irummy-hand-slot-glow {
+  animation: irummy-hand-slot-glow-pulse 0.9s ease-in-out infinite;
+  border-radius: 6px;
+  outline: 2px solid #ffd54f;
+  outline-offset: 1px;
+  box-shadow:
+    0 0 0 1px rgba(255, 213, 79, 0.55),
+    0 0 14px 2px rgba(255, 213, 79, 0.6),
+    0 0 26px 6px rgba(255, 171, 64, 0.35);
+  z-index: 2;
+}
+
+/* Empty slots glow too, but keep the dashed background subdued under it. */
+.irummy-hand-empty-slot.irummy-hand-slot-glow {
+  background: rgba(255, 213, 79, 0.08);
+  border-color: rgba(255, 213, 79, 0.55);
+}
+
+@keyframes irummy-hand-slot-glow-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(255, 213, 79, 0.55),
+      0 0 14px 2px rgba(255, 213, 79, 0.6),
+      0 0 26px 6px rgba(255, 171, 64, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px rgba(255, 213, 79, 0.85),
+      0 0 22px 4px rgba(255, 213, 79, 0.9),
+      0 0 36px 10px rgba(255, 171, 64, 0.55);
+  }
+}
+
+.irummy-card-selected {
+  transform: translateY(-14px);
+}
+
+.irummy-card-selected .rtile,
+.irummy-card-selected .card {
+  box-shadow:
+    0 0 0 2px rgba(66, 165, 245, 0.9),
+    0 10px 18px rgba(0, 0, 0, 0.4),
+    0 0 16px 4px rgba(33, 150, 243, 0.5);
+  filter: brightness(1.08);
+}
+
+.irummy-card-playable {
+  cursor: pointer;
+}
+
+/* --- Round end overlay --- */
+
+.irummy-round-end {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: irummy-fade-in 0.4s ease-out;
+  backdrop-filter: blur(4px);
+}
+
+@keyframes irummy-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.irummy-round-end-card {
+  background: linear-gradient(135deg, #1b5e20, #2e7d32);
+  border-radius: 20px;
+  padding: 32px 40px;
+  text-align: center;
+  max-width: 360px;
+  width: 90%;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  animation: irummy-card-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes irummy-card-pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.irummy-round-end-emoji {
+  font-size: 52px;
+  margin-bottom: 8px;
+}
+
+.irummy-round-end-title {
+  font-size: 24px;
+  margin: 0 0 8px;
+  color: #ffd54f;
+  text-shadow: 0 2px 8px rgba(255, 213, 79, 0.3);
+}
+
+.irummy-round-end-subtitle {
+  font-size: 14px;
+  color: #c8e6c9;
+  margin: 0 0 20px;
+}
+
+.irummy-round-end-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* --- Sticky rearrange toolbar --- */
+
+.irummy-rearrange-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 16px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(30, 30, 30, 0.88) 0%, rgba(15, 15, 15, 0.92) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 0 24px rgba(255, 215, 0, 0.15);
+  backdrop-filter: blur(8px);
+  animation: irummy-rearrange-bar-in 0.25s ease-out both;
+  max-width: calc(100vw - 24px);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+@keyframes irummy-rearrange-bar-in {
+  from { opacity: 0; transform: translate(-50%, 12px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.irummy-rearrange-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 200px;
+}
+
+.irummy-rearrange-progress-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.irummy-rearrange-progress-track {
+  flex: 1 1 80px;
+  min-width: 80px;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.irummy-rearrange-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.25s ease, background 0.25s ease;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.irummy-rearrange-progress-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffd54f;
+  white-space: nowrap;
+  min-width: 40px;
+  text-align: right;
+}
+
+.irummy-rearrange-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.irummy-rearrange-bar .irummy-btn {
+  font-size: 14px;
+  padding: 8px 18px;
+  font-weight: 700;
+  min-height: 36px;
+}
+
+/* --- Reshuffle button --- */
+
+.irummy-btn-reshuffle {
+  position: fixed;
+  bottom: 14px;
+  right: 14px;
+  z-index: 50;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+  backdrop-filter: blur(4px);
+}
+
+.irummy-btn-reshuffle:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  transform: rotate(90deg);
+}
+
+/* --- Confirm modal --- */
+
+.irummy-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+  animation: irummy-fade-in 0.25s ease-out;
+}
+
+.irummy-confirm-dialog {
+  background: rgba(30, 30, 30, 0.95);
+  border-radius: 16px;
+  padding: 24px 28px;
+  text-align: center;
+  max-width: 300px;
+  width: 85%;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  animation: irummy-card-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.irummy-confirm-text {
+  color: #fff;
+  font-size: 15px;
+  margin: 0 0 18px;
+  line-height: 1.4;
+}
+
+.irummy-confirm-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* --- Responsive --- */
+
+@media (max-width: 480px) {
+  .irummy-center {
+    gap: 16px;
+    padding: 4px;
+  }
+
+  .irummy-turn-indicator {
+    font-size: 13px;
+    padding: 4px 12px;
+  }
+
+  .irummy-btn {
+    padding: 5px 12px;
+    min-height: 36px;
+  }
+
+  .irummy-opponent-chip {
+    min-width: 48px;
+    padding: 2px 6px;
+  }
+
+  .irummy-opponent-name {
+    font-size: 10px;
+    max-width: 70px;
+  }
+
+  .irummy-hand-row {
+    --hand-card-w: 40px;
+    --hand-card-h: 56px;
+    grid-template-columns: repeat(7, minmax(40px, 1fr));
+    padding: 8px 12px 10px;
+    margin: 4px 56px 0 0;
+    border-radius: 10px;
+  }
+
+  .irummy-rearrange-bar {
+    gap: 8px;
+    padding: 6px 10px;
+    flex-direction: column;
+    bottom: 8px;
+  }
+
+  .irummy-rearrange-progress {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .irummy-rearrange-progress-label {
+    font-size: 10px;
+  }
+
+  .irummy-rearranging .irummy-player-area {
+    padding-bottom: 112px;
+  }
+}
+

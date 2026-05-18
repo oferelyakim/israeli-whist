@@ -1,0 +1,266 @@
+.trick-area {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.trump-indicator {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--panel-bg);
+  padding: 4px 12px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.trump-red {
+  color: var(--red-suit);
+}
+
+.trump-black {
+  color: #fff;
+}
+
+.trick-cards {
+  position: relative;
+  width: 160px;
+  height: 160px;
+}
+
+.trick-card {
+  position: absolute;
+  transition: all 0.3s ease;
+}
+
+.trick-card-south {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.trick-card-north {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.trick-card-west {
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.trick-card-east {
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.trick-number {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  background: var(--panel-bg);
+  padding: 1px 8px;
+  border-radius: 4px;
+}
+
+/* Last trick peek button */
+.last-trick-btn {
+  position: absolute;
+  bottom: -28px;
+  right: -10px;
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 2px 8px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.last-trick-btn:hover {
+  opacity: 1;
+  color: var(--text-light);
+}
+
+/* Last trick overlay */
+.last-trick-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: lt-fade-in 0.15s ease;
+}
+
+@keyframes lt-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.last-trick-panel {
+  background: linear-gradient(145deg, #1f321f 0%, #162416 100%);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  padding: 20px 24px;
+  position: relative;
+  min-width: 240px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.last-trick-title {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.last-trick-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.last-trick-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.last-trick-winner {
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.last-trick-name {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 80px;
+  color: var(--text-light);
+}
+
+.last-trick-winner .last-trick-name {
+  color: var(--gold);
+}
+
+.last-trick-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.last-trick-close:hover {
+  color: var(--text-light);
+}
+
+/* ===== Mobile Responsive ===== */
+@media (max-width: 768px) {
+  .trick-area {
+    width: 160px;
+    height: 160px;
+  }
+
+  .trick-cards {
+    width: 120px;
+    height: 120px;
+  }
+
+  .trump-indicator {
+    font-size: 12px;
+    top: -24px;
+    padding: 3px 10px;
+  }
+
+  .last-trick-btn {
+    font-size: 9px;
+    padding: 2px 6px;
+    bottom: -24px;
+  }
+
+  .last-trick-panel {
+    padding: 16px 18px;
+    min-width: 200px;
+  }
+
+  .last-trick-name {
+    font-size: 11px;
+    min-width: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .trick-area {
+    width: 130px;
+    height: 130px;
+  }
+
+  .trick-cards {
+    width: 100px;
+    height: 100px;
+  }
+
+  .trump-indicator {
+    font-size: 11px;
+    top: -20px;
+    padding: 2px 8px;
+  }
+
+  .trick-number {
+    font-size: 9px;
+    padding: 1px 6px;
+  }
+
+  .last-trick-btn {
+    font-size: 8px;
+    padding: 1px 5px;
+    bottom: -20px;
+  }
+
+  .last-trick-panel {
+    padding: 14px 14px;
+    min-width: 180px;
+  }
+
+  .last-trick-title {
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+
+  .last-trick-name {
+    font-size: 10px;
+    min-width: 50px;
+  }
+}

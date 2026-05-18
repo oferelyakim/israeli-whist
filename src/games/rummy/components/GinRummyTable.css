@@ -1,0 +1,511 @@
+/* ─── Gin Rummy Game Table ──────────────────────────────────── */
+
+.gin-table {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  background: radial-gradient(ellipse at center, var(--table-felt, #1b7a3e) 0%, var(--table-green-dark, #0f4a24) 100%);
+  color: #fff;
+  font-family: var(--font-main, system-ui, -apple-system, sans-serif);
+  user-select: none;
+  overflow: hidden;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Top bar ────────────────────────────────────────────────── */
+
+.gin-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  flex-shrink: 0;
+  min-height: 32px;
+  background: rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+.gin-top-bar-center {
+  font-size: 13px;
+  color: #ccc;
+}
+
+.gin-btn {
+  font-size: 13px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.gin-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.gin-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.gin-btn-primary {
+  background: #2196f3;
+  border-color: #1976d2;
+}
+
+.gin-btn-primary:hover:not(:disabled) {
+  background: #1e88e5;
+}
+
+.gin-btn-danger {
+  background: #c62828;
+  border-color: #b71c1c;
+}
+
+.gin-btn-knock {
+  background: #e65100;
+  border-color: #bf360c;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 6px 18px;
+}
+
+.gin-btn-knock:hover:not(:disabled) {
+  background: #f57c00;
+}
+
+.gin-btn-gin {
+  background: #ffd700;
+  border-color: #ffc107;
+  color: #000;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 6px 20px;
+  animation: gin-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes gin-pulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(255, 215, 0, 0.4); }
+  50% { box-shadow: 0 0 18px rgba(255, 215, 0, 0.8); }
+}
+
+.gin-btn-gin:hover:not(:disabled) {
+  background: #ffeb3b;
+}
+
+/* ─── Opponent ──────────────────────────────────────────────── */
+
+.gin-opponents {
+  display: flex;
+  justify-content: center;
+  padding: 4px 8px;
+  flex-shrink: 0;
+}
+
+.gin-opponent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  min-width: 80px;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.gin-opponent-active {
+  box-shadow: 0 0 10px 3px rgba(255, 215, 0, 0.4);
+  background: rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.3);
+}
+
+.gin-opponent-name {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.gin-opponent-cards {
+  display: flex;
+  gap: 1px;
+}
+
+.gin-opponent-cards .card {
+  --card-width: 28px;
+  --card-height: 40px;
+  font-size: 0.55em;
+}
+
+.gin-opponent-count {
+  font-size: 10px;
+  color: #aaa;
+  margin-top: 2px;
+}
+
+/* ─── Center area ───────────────────────────────────────────── */
+
+.gin-turn-indicator {
+  text-align: center;
+  padding: 2px 0;
+  flex-shrink: 0;
+  color: #ffd700;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.gin-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 8px;
+  flex-shrink: 0;
+}
+
+.gin-pile-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.gin-pile {
+  position: relative;
+  width: var(--card-width, 70px);
+  height: var(--card-height, 100px);
+  cursor: pointer;
+}
+
+.gin-pile-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.gin-empty-pile {
+  width: var(--card-width, 70px);
+  height: var(--card-height, 100px);
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.gin-pile-label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+.gin-pile-count {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.gin-pile-clickable {
+  cursor: pointer;
+}
+
+.gin-pile-clickable:hover {
+  filter: brightness(1.1);
+}
+
+.gin-pile-highlight {
+  box-shadow: 0 0 10px 3px rgba(33, 150, 243, 0.5);
+  border-radius: 6px;
+}
+
+/* ─── Deadwood indicator ────────────────────────────────────── */
+
+.gin-deadwood-info {
+  font-size: 13px;
+  color: #ffab91;
+  font-weight: 600;
+  text-align: center;
+  padding: 2px 0;
+}
+
+/* ─── Knock reveal ──────────────────────────────────────────── */
+
+.gin-knock-reveal {
+  flex: 1 1 0;
+  overflow-y: auto;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gin-knock-reveal-title {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffd700;
+}
+
+.gin-reveal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gin-reveal-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.gin-reveal-melds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.gin-reveal-meld {
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: box-shadow 0.2s;
+}
+
+.gin-reveal-meld .card {
+  --card-width: 42px;
+  --card-height: 60px;
+  font-size: 0.7em;
+}
+
+.gin-reveal-meld-target {
+  box-shadow: 0 0 8px 2px rgba(76, 175, 80, 0.5);
+  border-color: rgba(76, 175, 80, 0.5);
+  cursor: pointer;
+}
+
+.gin-reveal-deadwood {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+}
+
+.gin-reveal-deadwood .card {
+  --card-width: 42px;
+  --card-height: 60px;
+  font-size: 0.7em;
+}
+
+/* ─── Player area ────────────────────────────────────────────── */
+
+.gin-player-area {
+  flex-shrink: 0;
+  padding: 4px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.gin-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 2px 0;
+}
+
+.gin-layoff-hint {
+  font-size: 12px;
+  color: #a5d6a7;
+}
+
+.gin-hand-row {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.gin-hand-card {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  position: relative;
+  cursor: pointer;
+}
+
+.gin-hand-card:hover {
+  transform: translateY(-6px);
+}
+
+.gin-card-selected {
+  transform: translateY(-14px);
+}
+
+.gin-card-selected .card {
+  box-shadow: 0 0 8px 3px rgba(33, 150, 243, 0.6);
+}
+
+.gin-card-playable {
+  cursor: pointer;
+}
+
+.gin-card-locked {
+  opacity: 0.5;
+}
+
+/* ─── Round end overlay ──────────────────────────────────────── */
+
+.gin-round-end {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: gin-fade-in 0.4s ease-out;
+}
+
+@keyframes gin-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.gin-round-end-card {
+  background: linear-gradient(145deg, #1f6925, #2e7d32, #1a5c20);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 16px;
+  padding: 28px 36px;
+  text-align: center;
+  max-width: 340px;
+  width: 90%;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  animation: gin-card-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes gin-card-pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.gin-round-end-emoji {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.gin-round-end-title {
+  font-size: 24px;
+  margin: 0 0 8px;
+  color: #ffd700;
+}
+
+.gin-round-end-scores {
+  font-size: 14px;
+  color: #c8e6c9;
+  margin: 0 0 8px;
+}
+
+.gin-round-end-subtitle {
+  font-size: 14px;
+  color: #c8e6c9;
+  margin: 0 0 20px;
+}
+
+.gin-round-end-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ─── Reshuffle button ───────────────────────────────────────── */
+
+.gin-btn-reshuffle {
+  position: fixed;
+  bottom: 14px;
+  right: 14px;
+  z-index: 50;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ─── Confirm modal ──────────────────────────────────────────── */
+
+.gin-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gin-confirm-dialog {
+  background: rgba(30, 30, 30, 0.95);
+  border-radius: 14px;
+  padding: 24px 28px;
+  text-align: center;
+  max-width: 300px;
+  width: 85%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.gin-confirm-text {
+  color: #fff;
+  font-size: 15px;
+  margin: 0 0 18px;
+  line-height: 1.4;
+}
+
+.gin-confirm-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .gin-opponent-cards .card {
+    --card-width: 22px;
+    --card-height: 32px;
+    font-size: 0.45em;
+  }
+
+  .gin-reveal-meld .card,
+  .gin-reveal-deadwood .card {
+    --card-width: 36px;
+    --card-height: 52px;
+    font-size: 0.6em;
+  }
+
+  .gin-center {
+    gap: 16px;
+    padding: 4px;
+  }
+}

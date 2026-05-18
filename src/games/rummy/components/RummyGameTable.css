@@ -1,0 +1,454 @@
+/* ─── Rummy Game Table ───────────────────────────────────────── */
+
+.rummy-table {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  background: radial-gradient(ellipse at center, var(--table-felt, #1b7a3e) 0%, var(--table-green-dark, #0f4a24) 100%);
+  color: #fff;
+  font-family: var(--font-main, system-ui, -apple-system, sans-serif);
+  user-select: none;
+  overflow: hidden;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Top bar ────────────────────────────────────────────────── */
+
+.rummy-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  flex-shrink: 0;
+  min-height: 32px;
+  background: rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+.rummy-top-bar-center {
+  font-size: 13px;
+  color: #ccc;
+}
+
+.rummy-btn {
+  font-size: 13px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.rummy-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.rummy-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.rummy-btn-primary {
+  background: #2196f3;
+  border-color: #1976d2;
+}
+
+.rummy-btn-primary:hover:not(:disabled) {
+  background: #1e88e5;
+}
+
+.rummy-btn-danger {
+  background: #c62828;
+  border-color: #b71c1c;
+}
+
+/* ─── Opponents ──────────────────────────────────────────────── */
+
+.rummy-opponents {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 4px 8px;
+  flex-shrink: 0;
+}
+
+.rummy-opponent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  min-width: 80px;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.rummy-opponent-active {
+  box-shadow: 0 0 10px 3px rgba(255, 215, 0, 0.4);
+  background: rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.3);
+}
+
+.rummy-opponent-name {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.rummy-opponent-cards {
+  display: flex;
+  gap: 1px;
+}
+
+.rummy-opponent-cards .card {
+  --card-width: 28px;
+  --card-height: 40px;
+  font-size: 0.55em;
+}
+
+.rummy-opponent-count {
+  font-size: 10px;
+  color: #aaa;
+  margin-top: 2px;
+}
+
+/* ─── Center area (piles + turn indicator) ───────────────────── */
+
+.rummy-turn-indicator {
+  text-align: center;
+  padding: 2px 0;
+  flex-shrink: 0;
+  color: #ffd700;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.rummy-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 8px;
+  flex-shrink: 0;
+}
+
+.rummy-pile-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.rummy-pass-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-left: 12px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 200, 100, 0.4);
+  border-radius: 8px;
+}
+
+.rummy-pass-msg {
+  font-size: 12px;
+  color: #ffd27a;
+  max-width: 160px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.rummy-pile {
+  position: relative;
+  width: var(--card-width, 70px);
+  height: var(--card-height, 100px);
+  cursor: pointer;
+}
+
+.rummy-pile-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.rummy-empty-pile {
+  width: var(--card-width, 70px);
+  height: var(--card-height, 100px);
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.rummy-pile-label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+.rummy-pile-count {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.rummy-pile-clickable {
+  cursor: pointer;
+}
+
+.rummy-pile-clickable:hover {
+  filter: brightness(1.1);
+}
+
+.rummy-pile-highlight {
+  box-shadow: 0 0 10px 3px rgba(33, 150, 243, 0.5);
+  border-radius: 6px;
+}
+
+/* ─── Melds on table ─────────────────────────────────────────── */
+
+.rummy-melds-area {
+  flex: 1 1 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  padding: 4px 8px;
+  min-height: 140px;
+}
+
+.rummy-melds-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 4px;
+}
+
+.rummy-melds-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.rummy-meld {
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: box-shadow 0.2s;
+}
+
+.rummy-meld .card {
+  --card-width: 44px;
+  --card-height: 62px;
+  font-size: 0.72em;
+}
+
+.rummy-meld-highlight {
+  box-shadow: 0 0 8px 2px rgba(76, 175, 80, 0.5);
+  border-color: rgba(76, 175, 80, 0.5);
+}
+
+/* ─── Player area ────────────────────────────────────────────── */
+
+.rummy-player-area {
+  flex-shrink: 0;
+  padding: 4px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.rummy-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 2px 0;
+}
+
+.rummy-hand-row {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.rummy-hand-card {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  position: relative;
+  cursor: pointer;
+}
+
+.rummy-hand-card:hover {
+  transform: translateY(-6px);
+}
+
+.rummy-card-selected {
+  transform: translateY(-14px);
+}
+
+.rummy-card-selected .card {
+  box-shadow: 0 0 8px 3px rgba(33, 150, 243, 0.6);
+}
+
+.rummy-card-playable {
+  cursor: pointer;
+}
+
+/* ─── Round end overlay ──────────────────────────────────────── */
+
+.rummy-round-end {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: rummy-fade-in 0.4s ease-out;
+}
+
+@keyframes rummy-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.rummy-round-end-card {
+  background: linear-gradient(145deg, #1f6925, #2e7d32, #1a5c20);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 16px;
+  padding: 28px 36px;
+  text-align: center;
+  max-width: 340px;
+  width: 90%;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  animation: rummy-card-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes rummy-card-pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.rummy-round-end-emoji {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.rummy-round-end-title {
+  font-size: 24px;
+  margin: 0 0 8px;
+  color: #ffd700;
+}
+
+.rummy-round-end-subtitle {
+  font-size: 14px;
+  color: #c8e6c9;
+  margin: 0 0 20px;
+}
+
+.rummy-round-end-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ─── Reshuffle button ───────────────────────────────────────── */
+
+.rummy-btn-reshuffle {
+  position: fixed;
+  bottom: 14px;
+  right: 14px;
+  z-index: 50;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ─── Confirm modal ──────────────────────────────────────────── */
+
+.rummy-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rummy-confirm-dialog {
+  background: rgba(30, 30, 30, 0.95);
+  border-radius: 14px;
+  padding: 24px 28px;
+  text-align: center;
+  max-width: 300px;
+  width: 85%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.rummy-confirm-text {
+  color: #fff;
+  font-size: 15px;
+  margin: 0 0 18px;
+  line-height: 1.4;
+}
+
+.rummy-confirm-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .rummy-opponent-cards .card {
+    --card-width: 22px;
+    --card-height: 32px;
+    font-size: 0.45em;
+  }
+
+  /* Keep meld cards readable — do NOT shrink below 40px wide */
+  .rummy-meld .card {
+    --card-width: 40px;
+    --card-height: 57px;
+    font-size: 0.65em;
+  }
+
+  .rummy-melds-grid {
+    gap: 6px;
+  }
+
+  .rummy-center {
+    gap: 16px;
+    padding: 4px;
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(npx eslint *)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(npx firebase *)",
+      "Bash(firebase --version)",
+      "Bash(wait)",
+      "Bash(npm run *)",
+      "Bash(firebase deploy *)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(./node_modules/.bin/esbuild --bundle scripts/test-bot-layoff.mts --platform=node --format=esm --outfile=/tmp/test-layoff.mjs --log-level=warning)",
+      "Bash(node /tmp/test-layoff.mjs)",
+      "WebFetch(domain:www.thesprucecrafts.com)",
+      "WebSearch",
+      "Bash(git -C \"C:\\\\tmp\\\\israeli-whist\" status)"
+    ]
+  }
+}

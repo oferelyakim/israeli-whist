@@ -1,0 +1,1198 @@
+/* ============================================
+   YanivGameTable — Main game layout
+   ============================================ */
+
+.yaniv-table {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at center, var(--table-felt) 0%, var(--table-green-dark) 100%);
+  position: relative;
+  overflow: hidden;
+  font-family: var(--font-main);
+  color: var(--text-light);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== Game info (top-left) ===== */
+.yaniv-game-info {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+  z-index: 10;
+  background: var(--panel-bg);
+  padding: 6px 14px;
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+}
+
+/* ===== Score panel (top-right) ===== */
+.yaniv-score-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.yaniv-score-toggle {
+  padding: 6px 14px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  color: var(--text-light);
+  font-size: 13px;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+}
+
+.yaniv-score-toggle:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.yaniv-scores-mini {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  backdrop-filter: blur(8px);
+  font-size: 11px;
+  min-width: 110px;
+}
+
+.yaniv-scores-mini-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 1px 0;
+}
+
+.yaniv-scores-mini-name {
+  color: var(--text-muted);
+}
+
+.yaniv-scores-mini-value {
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.yaniv-scores-mini-eliminated {
+  color: var(--danger);
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* ===== Player areas ===== */
+.yaniv-player-area {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 5;
+}
+
+/* Bottom (human) */
+.yaniv-player-bottom {
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Top */
+.yaniv-player-top {
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Left */
+.yaniv-player-left {
+  left: 10px;
+  top: 30%;
+  transform: translateY(-50%);
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Right */
+.yaniv-player-right {
+  right: 10px;
+  top: 30%;
+  transform: translateY(-50%);
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Top-left */
+.yaniv-player-top-left {
+  top: 10px;
+  left: 14%;
+  transform: translateX(-50%);
+}
+
+/* Top-right */
+.yaniv-player-top-right {
+  top: 10px;
+  right: 14%;
+  transform: translateX(50%);
+}
+
+/* Player info badge */
+.yaniv-player-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--panel-bg);
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  backdrop-filter: blur(4px);
+  transition: border-color 0.3s, box-shadow 0.3s;
+  white-space: nowrap;
+}
+
+.yaniv-player-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(79, 195, 247, 0.3);
+}
+
+.yaniv-player-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.yaniv-player-details {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.yaniv-player-score-label {
+  font-size: 11px;
+  color: var(--gold);
+}
+
+.yaniv-player-eliminated .yaniv-player-name {
+  text-decoration: line-through;
+  color: var(--danger);
+  opacity: 0.6;
+}
+
+/* Opponent card backs (compact row) */
+.yaniv-opponent-cards {
+  display: flex;
+  gap: 0;
+  position: relative;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.yaniv-opponent-cards .card {
+  margin-left: -20px;
+}
+
+.yaniv-opponent-cards .card:first-child {
+  margin-left: 0;
+}
+
+/* ===== Center area: draw + discard ===== */
+.yaniv-center-area {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  z-index: 20;
+}
+
+/* Draw pile */
+.yaniv-draw-pile {
+  position: relative;
+  cursor: default;
+}
+
+.yaniv-draw-pile-stack {
+  position: relative;
+  width: var(--card-width);
+  height: var(--card-height);
+}
+
+.yaniv-draw-pile-stack .card {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.yaniv-draw-pile-stack .card:nth-child(2) {
+  top: -1px;
+  left: 1px;
+}
+
+.yaniv-draw-pile-stack .card:nth-child(3) {
+  top: -2px;
+  left: 2px;
+}
+
+.yaniv-pile-count {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+.yaniv-pile-label {
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Draw pile clickable state */
+.yaniv-draw-pile-clickable {
+  cursor: pointer;
+}
+
+.yaniv-draw-pile-clickable .yaniv-draw-pile-stack {
+  transition: transform 0.2s;
+}
+
+.yaniv-draw-pile-clickable:hover .yaniv-draw-pile-stack {
+  transform: scale(1.05);
+}
+
+.yaniv-draw-pile-clickable .yaniv-draw-pile-stack::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  animation: yaniv-pulse 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Discard pile */
+.yaniv-discard-area {
+  position: relative;
+  min-width: var(--card-width);
+  min-height: var(--card-height);
+}
+
+.yaniv-discard-history {
+  position: absolute;
+  display: flex;
+  gap: 4px;
+  opacity: calc(0.85 - 0.2 * var(--history-depth, 1));
+  transform: translateX(calc(-10px * var(--history-depth, 1)))
+             translateY(calc(-20px * var(--history-depth, 1)))
+             scale(calc(1 - 0.04 * var(--history-depth, 1)));
+  pointer-events: none;
+  z-index: calc(-1 * var(--history-depth, 1));
+  filter: brightness(0.9) saturate(0.7);
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.yaniv-discard-group {
+  display: flex;
+  gap: 4px;
+}
+
+.yaniv-discard-group .card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.yaniv-discard-drawable {
+  cursor: pointer;
+  position: relative;
+}
+
+.yaniv-discard-drawable::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  animation: yaniv-pulse 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.yaniv-discard-drawable:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 0 12px rgba(79, 195, 247, 0.5);
+}
+
+.yaniv-discard-empty {
+  width: var(--card-width);
+  height: var(--card-height);
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  border-radius: var(--card-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* ===== Human hand area ===== */
+.yaniv-hand {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.yaniv-hand-card {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.yaniv-hand-card:hover {
+  transform: translateY(-8px);
+}
+
+.yaniv-hand-card-selected {
+  transform: translateY(-16px);
+}
+
+.yaniv-hand-card-selected .card {
+  box-shadow: 0 0 0 3px var(--accent), 2px 6px 16px var(--card-shadow);
+}
+
+.yaniv-hand-card:hover:not(.yaniv-hand-card-selected) .card {
+  box-shadow: 2px 6px 12px var(--card-shadow);
+}
+
+/* Hand cards are always fully visible */
+.yaniv-hand .card {
+  opacity: 1;
+}
+
+/* ===== Action panels ===== */
+.yaniv-action-bar {
+  position: absolute;
+  bottom: 185px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 50;
+}
+
+.yaniv-validation-text {
+  font-size: 13px;
+  padding: 4px 14px;
+  border-radius: 8px;
+  background: var(--panel-bg);
+  backdrop-filter: blur(8px);
+}
+
+.yaniv-validation-valid {
+  color: var(--success);
+  border: 1px solid var(--success);
+}
+
+.yaniv-validation-invalid {
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+.yaniv-validation-prompt {
+  color: var(--text-muted);
+  border: 1px solid var(--panel-border);
+}
+
+.yaniv-action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.yaniv-btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+}
+
+.yaniv-btn:active {
+  transform: scale(0.96);
+}
+
+.yaniv-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.yaniv-btn-primary {
+  background: var(--accent);
+  color: #000;
+}
+
+.yaniv-btn-primary:hover:not(:disabled) {
+  background: #6dd0fa;
+  box-shadow: 0 0 8px rgba(79, 195, 247, 0.4);
+}
+
+.yaniv-btn-yaniv {
+  background: var(--gold);
+  color: #000;
+  font-size: 15px;
+  padding: 10px 28px;
+  animation: yaniv-pulse-gold 1.5s ease-in-out infinite;
+}
+
+.yaniv-btn-yaniv:hover:not(:disabled) {
+  background: #ffe34d;
+}
+
+.yaniv-btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.yaniv-btn-danger:hover:not(:disabled) {
+  background: #ef5350;
+}
+
+.yaniv-btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-light);
+  border: 1px solid var(--panel-border);
+}
+
+.yaniv-btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.yaniv-btn-reshuffle {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.5;
+  z-index: 20;
+}
+
+.yaniv-btn-reshuffle:hover {
+  opacity: 1;
+}
+
+/* Reshuffle overlay */
+.yaniv-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.yaniv-overlay-card {
+  background: rgba(30, 30, 50, 0.95);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  max-width: 300px;
+  width: 85%;
+}
+
+/* Draw source prompt */
+.yaniv-draw-prompt {
+  position: absolute;
+  bottom: 185px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 50;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 12px 20px;
+  backdrop-filter: blur(8px);
+}
+
+.yaniv-draw-prompt-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.yaniv-draw-prompt-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Quick-stick panel */
+.yaniv-quickstick-panel {
+  position: absolute;
+  bottom: 185px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 50;
+  background: var(--panel-bg);
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  padding: 14px 24px;
+  backdrop-filter: blur(8px);
+}
+
+.yaniv-quickstick-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.yaniv-quickstick-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Waiting panel */
+.yaniv-waiting-panel {
+  position: absolute;
+  bottom: 185px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 14px;
+  color: var(--text-muted);
+  backdrop-filter: blur(8px);
+  z-index: 50;
+}
+
+/* ===== Round Summary Overlay ===== */
+.yaniv-round-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.yaniv-round-panel {
+  background: linear-gradient(145deg, #1f321f 0%, #162416 100%);
+  border: 2px solid var(--gold);
+  border-radius: 20px;
+  padding: 28px 36px;
+  max-width: 600px;
+  width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+.yaniv-round-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gold);
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.yaniv-round-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.yaniv-assaf-banner {
+  background: rgba(229, 57, 53, 0.15);
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  padding: 8px 16px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--danger);
+  margin-bottom: 16px;
+}
+
+/* Revealed hands */
+.yaniv-revealed-hands {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.yaniv-revealed-hand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.yaniv-revealed-hand-declarer {
+  border: 1px solid var(--gold);
+  background: rgba(255, 215, 0, 0.05);
+}
+
+.yaniv-revealed-name {
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 80px;
+}
+
+.yaniv-revealed-cards {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.yaniv-revealed-value {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* Score table */
+.yaniv-score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.yaniv-score-table th {
+  padding: 6px 10px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.yaniv-score-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.yaniv-score-table .yaniv-score-declarer td {
+  color: var(--gold);
+}
+
+.yaniv-score-table .yaniv-score-assafed td {
+  color: var(--danger);
+}
+
+.yaniv-score-reduction {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.yaniv-score-positive {
+  color: var(--danger);
+}
+
+.yaniv-score-zero {
+  color: var(--success);
+}
+
+.yaniv-round-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ===== Game Over Overlay ===== */
+.yaniv-gameover-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+}
+
+.yaniv-gameover-panel {
+  background: linear-gradient(145deg, #1f321f 0%, #162416 100%);
+  border: 2px solid var(--gold);
+  border-radius: 20px;
+  padding: 36px 48px;
+  text-align: center;
+  max-width: 500px;
+  width: 90vw;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 215, 0, 0.1);
+}
+
+.yaniv-gameover-title {
+  font-size: 28px;
+  color: var(--gold);
+  margin-bottom: 20px;
+}
+
+.yaniv-gameover-scores {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.yaniv-gameover-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.yaniv-gameover-winner {
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid var(--gold);
+}
+
+.yaniv-gameover-rank {
+  font-weight: 700;
+  color: var(--text-muted);
+  width: 30px;
+}
+
+.yaniv-gameover-winner .yaniv-gameover-rank {
+  color: var(--gold);
+}
+
+.yaniv-gameover-name {
+  flex: 1;
+  text-align: left;
+  font-weight: 600;
+}
+
+.yaniv-gameover-score {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.yaniv-gameover-eliminated-tag {
+  font-size: 10px;
+  color: var(--danger);
+  background: rgba(229, 57, 53, 0.15);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+/* ===== Scoreboard modal ===== */
+.yaniv-scoreboard-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 250;
+}
+
+.yaniv-scoreboard-panel {
+  background: linear-gradient(145deg, #1f321f 0%, #162416 100%);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  padding: 24px 28px;
+  max-width: 600px;
+  width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.yaniv-scoreboard-title {
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 16px;
+  color: var(--gold);
+}
+
+.yaniv-scoreboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.yaniv-scoreboard-table th {
+  padding: 4px 8px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.yaniv-scoreboard-table td {
+  padding: 4px 8px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.yaniv-scoreboard-table .yaniv-sb-round-label {
+  text-align: left;
+  color: var(--text-muted);
+}
+
+.yaniv-scoreboard-close {
+  display: block;
+  margin: 16px auto 0;
+  padding: 6px 20px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  color: var(--text-light);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.yaniv-scoreboard-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ===== Hand value indicator ===== */
+.yaniv-hand-value {
+  position: absolute;
+  bottom: 165px;
+  right: 16px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+.yaniv-hand-value-low {
+  color: var(--success);
+  border-color: var(--success);
+}
+
+/* ===== Animations ===== */
+@keyframes yaniv-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes yaniv-pulse-gold {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 215, 0, 0.3); }
+  50% { box-shadow: 0 0 18px rgba(255, 215, 0, 0.6); }
+}
+
+@keyframes yaniv-deal-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.yaniv-card-deal {
+  animation: yaniv-deal-in 0.3s ease-out forwards;
+}
+
+/* ===== Mobile Responsive ===== */
+@media (max-width: 768px) {
+  .yaniv-game-info {
+    font-size: 11px;
+    padding: 4px 10px;
+    gap: 10px;
+  }
+
+  .yaniv-score-panel {
+    top: 8px;
+    right: 8px;
+  }
+
+  .yaniv-score-toggle {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  .yaniv-scores-mini {
+    font-size: 10px;
+    padding: 4px 8px;
+    min-width: 90px;
+  }
+
+  .yaniv-player-info {
+    padding: 3px 8px;
+  }
+
+  .yaniv-player-name {
+    font-size: 11px;
+  }
+
+  .yaniv-player-details,
+  .yaniv-player-score-label {
+    font-size: 10px;
+  }
+
+  .yaniv-player-bottom {
+    bottom: 5px;
+  }
+
+  .yaniv-player-top {
+    top: 5px;
+  }
+
+  .yaniv-player-left {
+    left: 5px;
+  }
+
+  .yaniv-player-right {
+    right: 5px;
+  }
+
+  .yaniv-center-area {
+    gap: 20px;
+  }
+
+  .yaniv-hand {
+    gap: 2px;
+  }
+
+  .yaniv-action-bar,
+  .yaniv-draw-prompt,
+  .yaniv-quickstick-panel,
+  .yaniv-waiting-panel {
+    bottom: 170px;
+  }
+
+  .yaniv-btn {
+    font-size: 12px;
+    padding: 6px 14px;
+  }
+
+  .yaniv-btn-yaniv {
+    font-size: 13px;
+    padding: 8px 22px;
+  }
+
+  .yaniv-round-panel {
+    padding: 20px 24px;
+    border-radius: 16px;
+  }
+
+  .yaniv-round-title {
+    font-size: 18px;
+  }
+
+  .yaniv-gameover-panel {
+    padding: 24px 28px;
+    border-radius: 16px;
+  }
+
+  .yaniv-gameover-title {
+    font-size: 22px;
+  }
+
+  .yaniv-gameover-score {
+    font-size: 16px;
+  }
+
+  .yaniv-hand-value {
+    bottom: 150px;
+    right: 10px;
+    font-size: 11px;
+  }
+
+  .yaniv-opponent-cards .card {
+    margin-left: -24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .yaniv-game-info {
+    top: 6px;
+    left: 6px;
+    font-size: 10px;
+    padding: 3px 8px;
+    gap: 6px;
+  }
+
+  .yaniv-score-panel {
+    top: 6px;
+    right: 6px;
+  }
+
+  .yaniv-score-toggle {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .yaniv-scores-mini {
+    font-size: 9px;
+    min-width: 70px;
+  }
+
+  .yaniv-player-info {
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+
+  .yaniv-player-name {
+    font-size: 10px;
+  }
+
+  .yaniv-player-details,
+  .yaniv-player-score-label {
+    font-size: 9px;
+  }
+
+  .yaniv-player-bottom {
+    bottom: 6px;
+  }
+
+  .yaniv-player-top {
+    top: 2px;
+  }
+
+  .yaniv-player-left {
+    left: 2px;
+  }
+
+  .yaniv-player-right {
+    right: 2px;
+  }
+
+  .yaniv-center-area {
+    gap: 12px;
+  }
+
+  .yaniv-hand {
+    gap: 1px;
+  }
+
+  .yaniv-action-bar,
+  .yaniv-draw-prompt,
+  .yaniv-quickstick-panel,
+  .yaniv-waiting-panel {
+    bottom: 150px;
+    font-size: 12px;
+    padding: 8px 14px;
+  }
+
+  .yaniv-btn {
+    font-size: 11px;
+    padding: 5px 12px;
+  }
+
+  .yaniv-btn-yaniv {
+    font-size: 12px;
+    padding: 7px 18px;
+  }
+
+  .yaniv-round-panel {
+    padding: 16px 18px;
+  }
+
+  .yaniv-round-title {
+    font-size: 16px;
+  }
+
+  .yaniv-score-table {
+    font-size: 11px;
+  }
+
+  .yaniv-gameover-panel {
+    padding: 20px;
+  }
+
+  .yaniv-gameover-title {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .yaniv-gameover-entry {
+    padding: 6px 10px;
+    gap: 8px;
+  }
+
+  .yaniv-gameover-score {
+    font-size: 14px;
+  }
+
+  .yaniv-hand-value {
+    bottom: 130px;
+    right: 6px;
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .yaniv-opponent-cards .card {
+    margin-left: -28px;
+  }
+
+  .yaniv-revealed-cards .card {
+    --card-width: 36px;
+    --card-height: 52px;
+  }
+}

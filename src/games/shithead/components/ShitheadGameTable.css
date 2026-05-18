@@ -1,0 +1,600 @@
+/* ─── Table ──────────────────────────────────────────────────── */
+
+.sh-table {
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-main, 'Segoe UI', sans-serif);
+  color: #fff;
+  user-select: none;
+  background: radial-gradient(ellipse at center, #1a5a30 0%, #0d2818 70%, #0a1f14 100%);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Top bar ────────────────────────────────────────────────── */
+
+.sh-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  min-height: 32px;
+  flex-shrink: 0;
+}
+
+.sh-top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sh-top-bar-center {
+  font-size: 13px;
+  color: #ccc;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────── */
+
+.sh-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  padding: 5px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.3;
+  transition: background 0.15s;
+}
+
+.sh-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.sh-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sh-btn-back {
+  font-size: 12px;
+}
+
+.sh-btn-primary {
+  background: #2196f3;
+  border-color: #1976d2;
+}
+
+.sh-btn-primary:hover:not(:disabled) {
+  background: #1e88e5;
+}
+
+.sh-btn-danger {
+  background: #e53935;
+  border-color: #c62828;
+}
+
+.sh-btn-danger:hover:not(:disabled) {
+  background: #ef5350;
+}
+
+.sh-btn-success {
+  background: #43a047;
+  border-color: #388e3c;
+}
+
+.sh-btn-success:hover:not(:disabled) {
+  background: #4caf50;
+}
+
+/* ─── Opponents area ─────────────────────────────────────────── */
+
+.sh-opponents {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 4px 8px 2px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.sh-opponent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  min-width: 80px;
+  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.sh-opponent-active {
+  background: rgba(255, 215, 0, 0.12);
+  border-color: rgba(255, 215, 0, 0.3);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);
+}
+
+.sh-opponent-finished {
+  opacity: 0.5;
+}
+
+.sh-opponent-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+.sh-opponent-active .sh-opponent-name {
+  color: #ffd700;
+}
+
+.sh-opponent-info {
+  font-size: 11px;
+  color: #aaa;
+}
+
+.sh-opponent-cards {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+}
+
+.sh-opponent-cards .card {
+  --card-width: 36px;
+  --card-height: 52px;
+  font-size: 0.65em;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* ─── Center area ────────────────────────────────────────────── */
+
+.sh-center {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  min-height: 0;
+  position: relative;
+  padding: 8px 0;
+}
+
+.sh-pile-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.sh-pile {
+  position: relative;
+  width: var(--card-width, 70px);
+  height: var(--card-height, 100px);
+}
+
+@keyframes sh-card-play {
+  from { transform: scale(0.9); opacity: 0.7; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.sh-pile-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  animation: sh-card-play 0.2s ease-out;
+}
+
+.sh-pile-card:nth-child(2) {
+  top: 1px;
+  left: 1px;
+}
+
+.sh-pile-card:nth-child(3) {
+  top: 2px;
+  left: 2px;
+}
+
+.sh-pile-label {
+  font-size: 11px;
+  color: #aaa;
+  text-align: center;
+}
+
+.sh-pile-count {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.sh-empty-pile {
+  width: var(--card-width, 70px);
+  height: var(--card-height, 100px);
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: var(--card-radius, 6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* ─── Turn indicator ─────────────────────────────────────────── */
+
+.sh-turn-indicator {
+  text-align: center;
+  flex-shrink: 0;
+  padding: 2px 0;
+}
+
+.sh-turn-indicator span,
+.sh-turn-indicator {
+  color: #ffd700;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ─── Player area ────────────────────────────────────────────── */
+
+.sh-player-area {
+  flex-shrink: 0;
+  padding: 4px 8px max(10px, env(safe-area-inset-bottom, 10px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.sh-card-rows {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.sh-table-cards-label {
+  font-size: 10px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+  line-height: 1;
+}
+
+.sh-face-down-row,
+.sh-face-up-row,
+.sh-hand-row {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Action buttons row */
+.sh-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  padding: 2px 0;
+  flex-shrink: 0;
+}
+
+.sh-hand-card {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  position: relative;
+}
+
+.sh-hand-card .card {
+  cursor: pointer;
+}
+
+.sh-card-selected .card {
+  transform: translateY(-16px);
+  box-shadow: 0 0 0 3px #ffd700, 0 8px 20px rgba(255, 215, 0, 0.4);
+  z-index: 10;
+}
+
+.sh-card-clickable {
+  cursor: pointer;
+}
+
+.sh-card-clickable .card {
+  cursor: pointer;
+}
+
+.sh-card-clickable:hover .card {
+  transform: translateY(-8px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+.sh-face-down-clickable {
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.sh-face-down-clickable:hover {
+  transform: translateY(-4px);
+}
+
+.sh-face-down-clickable .card-back {
+  cursor: pointer;
+  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.5), 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+
+/* ─── Swap phase banner ──────────────────────────────────────── */
+
+.sh-swap-banner {
+  background: rgba(33, 150, 243, 0.15);
+  border: 1px solid rgba(33, 150, 243, 0.3);
+  border-radius: 10px;
+  padding: 8px 16px;
+  text-align: center;
+  margin: 0 12px;
+}
+
+.sh-swap-banner p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #90caf9;
+}
+
+.sh-swap-hint {
+  font-size: 11px;
+  color: #64b5f6;
+}
+
+.sh-swap-selection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 6px 0;
+  font-size: 12px;
+  color: #e0e0e0;
+}
+
+.sh-swap-selected-label {
+  padding: 2px 8px;
+  background: rgba(255, 215, 0, 0.2);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  border-radius: 4px;
+  font-size: 11px;
+  color: #ffd700;
+}
+
+/* ─── Round end overlay ──────────────────────────────────────── */
+
+.sh-round-end {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: sh-fade-in 0.4s ease-out;
+}
+
+@keyframes sh-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sh-round-end-card {
+  background: linear-gradient(145deg, #5a2020, #6d2020, #4a1515);
+  border: 1px solid rgba(255, 150, 150, 0.15);
+  border-radius: 20px;
+  padding: 28px 36px;
+  text-align: center;
+  max-width: 360px;
+  width: 90%;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  animation: sh-card-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes sh-card-pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.sh-round-end-emoji {
+  font-size: 64px;
+  margin-bottom: 8px;
+}
+
+.sh-round-end-title {
+  font-size: 28px;
+  margin: 0 0 8px;
+  color: #ffab91;
+}
+
+.sh-round-end-loser {
+  font-size: 18px;
+  margin: 0 0 16px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.sh-round-end-order {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  font-size: 14px;
+}
+
+.sh-round-end-order li {
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.sh-round-end-order li:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sh-round-end-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ─── Burn animation ─────────────────────────────────────────── */
+
+.sh-burn-flash {
+  animation: sh-burn 0.6s ease-out;
+}
+
+@keyframes sh-burn {
+  0% { box-shadow: 0 0 0 0 rgba(255, 100, 0, 0.8); }
+  50% { box-shadow: 0 0 30px 15px rgba(255, 100, 0, 0.6); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 100, 0, 0); }
+}
+
+/* ─── Responsive ─────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .sh-top-bar {
+    padding: 4px 8px;
+  }
+
+  .sh-opponents {
+    gap: 8px;
+    padding: 4px 6px 2px;
+  }
+
+  .sh-opponent {
+    min-width: 80px;
+    padding: 4px 6px;
+  }
+
+  .sh-opponent-cards .card {
+    --card-width: 28px;
+    --card-height: 40px;
+    font-size: 0.55em;
+  }
+
+  .sh-center {
+    gap: 20px;
+    padding: 4px 0;
+  }
+
+  .sh-player-area {
+    padding: 2px 6px 8px;
+  }
+
+  .sh-face-down-row,
+  .sh-face-up-row {
+    gap: 4px;
+  }
+
+  .sh-swap-banner {
+    margin: 0 6px;
+    padding: 6px 10px;
+  }
+}
+
+.sh-btn-reshuffle {
+  position: fixed;
+  bottom: 14px;
+  right: 14px;
+  z-index: 50;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  padding: 0;
+}
+
+.sh-btn-fast-forward {
+  position: fixed;
+  bottom: 14px;
+  right: 68px;
+  z-index: 50;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sh-btn-fast-forward:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.sh-ff-active {
+  background: rgba(255, 215, 0, 0.4) !important;
+  border-color: rgba(255, 215, 0, 0.6) !important;
+  color: #ffd700 !important;
+}
+
+/* ─── Reshuffle confirm modal ───────────────────────────────── */
+
+.sh-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sh-confirm-dialog {
+  background: rgba(30, 30, 30, 0.95);
+  border-radius: 14px;
+  padding: 24px 28px;
+  text-align: center;
+  max-width: 300px;
+  width: 85%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.sh-confirm-text {
+  color: #fff;
+  font-size: 15px;
+  margin: 0 0 18px;
+  line-height: 1.4;
+}
+
+.sh-confirm-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+@media (max-width: 400px) {
+  .sh-opponent-cards .card {
+    --card-width: 24px;
+    --card-height: 36px;
+    font-size: 0.5em;
+  }
+
+}

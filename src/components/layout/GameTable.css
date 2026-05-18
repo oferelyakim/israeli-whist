@@ -1,0 +1,488 @@
+.game-table {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(ellipse at center, var(--table-felt) 0%, var(--table-green-dark) 100%);
+  position: relative;
+  overflow: hidden;
+  /* Subtle felt texture via noise overlay */
+  background-blend-mode: overlay;
+}
+
+/* Top right panel: Scores + bids summary */
+.top-right-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.score-toggle {
+  padding: 6px 14px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  color: var(--text-light);
+  font-size: 13px;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  width: 100%;
+  text-align: center;
+}
+
+.score-toggle:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.bids-summary {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  backdrop-filter: blur(8px);
+  font-size: 11px;
+  min-width: 100px;
+}
+
+.summary-trump {
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 4px;
+  color: var(--gold);
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 1px 0;
+}
+
+.summary-name {
+  color: var(--text-muted);
+}
+
+.summary-bid {
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+/* Home button + Game info area */
+.game-info-area {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.home-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: transform 0.15s, opacity 0.15s;
+  opacity: 0.85;
+}
+
+.home-btn:hover {
+  transform: scale(1.08);
+  opacity: 1;
+}
+
+.home-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+}
+
+.game-info {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+  background: var(--panel-bg);
+  padding: 6px 14px;
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+}
+
+/* Player areas */
+.player-area {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.player-area-bottom {
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.player-area-top {
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.player-area-left {
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  flex-direction: row;
+  gap: 4px;
+}
+
+.player-area-right {
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  flex-direction: row-reverse;
+  gap: 4px;
+}
+
+/* Player info badges */
+.player-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--panel-bg);
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  backdrop-filter: blur(4px);
+  transition: border-color 0.3s;
+  z-index: 5;
+  white-space: nowrap;
+}
+
+.player-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(79, 195, 247, 0.3), 0 0 4px rgba(79, 195, 247, 0.15);
+}
+
+.player-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.player-stats {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.player-score {
+  font-size: 11px;
+  color: var(--gold);
+}
+
+/* Collect trick button */
+.collect-trick-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 60px);
+  padding: 8px 20px;
+  background: var(--accent);
+  color: #000;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  z-index: 60;
+  animation: pulse-glow 1.5s ease-in-out infinite;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.collect-trick-btn:hover {
+  background: var(--accent-hover, #81d4fa);
+}
+
+.collect-trick-btn:active {
+  transform: translate(-50%, 60px) scale(0.96);
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(79, 195, 247, 0.4); }
+  50% { box-shadow: 0 0 16px rgba(79, 195, 247, 0.7); }
+}
+
+/* Waiting panel */
+.waiting-panel {
+  position: absolute;
+  bottom: 145px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 14px;
+  color: var(--text-muted);
+  backdrop-filter: blur(8px);
+  z-index: 50;
+}
+
+/* Game over */
+.game-over-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+}
+
+.game-over-panel {
+  background: linear-gradient(145deg, #1f321f 0%, #162416 100%);
+  border: 2px solid var(--gold);
+  border-radius: 20px;
+  padding: 36px 48px;
+  text-align: center;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 215, 0, 0.1);
+}
+
+.game-over-panel h2 {
+  font-size: 28px;
+  color: var(--gold);
+  margin-bottom: 20px;
+}
+
+.final-scores {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.final-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.final-winner {
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid var(--gold);
+}
+
+.final-rank {
+  font-weight: 700;
+  color: var(--text-muted);
+  width: 30px;
+}
+
+.final-winner .final-rank {
+  color: var(--gold);
+}
+
+.final-name {
+  flex: 1;
+  text-align: left;
+  font-weight: 600;
+}
+
+.final-score {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+/* ===== Mobile Responsive ===== */
+@media (max-width: 768px) {
+  .game-info-area {
+    top: 8px;
+    left: 8px;
+  }
+
+  .home-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .game-info {
+    font-size: 11px;
+    padding: 4px 10px;
+    gap: 10px;
+  }
+
+  .top-right-panel {
+    top: 8px;
+    right: 8px;
+  }
+
+  .score-toggle {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  .bids-summary {
+    font-size: 10px;
+    padding: 4px 8px;
+    min-width: 80px;
+  }
+
+  .summary-trump {
+    font-size: 11px;
+  }
+
+  .player-info {
+    padding: 3px 8px;
+  }
+
+  .player-name {
+    font-size: 11px;
+  }
+
+  .player-stats,
+  .player-score {
+    font-size: 10px;
+  }
+
+  .player-area-bottom {
+    bottom: 5px;
+  }
+
+  .player-area-top {
+    top: 5px;
+  }
+
+  .player-area-left {
+    left: 5px;
+  }
+
+  .player-area-right {
+    right: 5px;
+  }
+
+  .collect-trick-btn {
+    font-size: 12px;
+    padding: 6px 16px;
+    transform: translate(-50%, 50px);
+  }
+
+  .waiting-panel {
+    bottom: 110px;
+    font-size: 12px;
+    padding: 8px 16px;
+  }
+
+  .game-over-panel {
+    padding: 24px 28px;
+    border-radius: 16px;
+    max-width: 90vw;
+  }
+
+  .game-over-panel h2 {
+    font-size: 22px;
+  }
+
+  .final-score {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-info-area {
+    top: 6px;
+    left: 6px;
+  }
+
+  .home-logo {
+    width: 28px;
+    height: 28px;
+  }
+
+  .game-info {
+    font-size: 10px;
+    padding: 3px 8px;
+    gap: 6px;
+  }
+
+  .top-right-panel {
+    top: 6px;
+    right: 6px;
+  }
+
+  .score-toggle {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .bids-summary {
+    font-size: 9px;
+    min-width: 70px;
+  }
+
+  .player-info {
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+
+  .player-name {
+    font-size: 10px;
+  }
+
+  .player-stats,
+  .player-score {
+    font-size: 9px;
+  }
+
+  .player-area-bottom {
+    bottom: 2px;
+  }
+
+  .player-area-top {
+    top: 2px;
+  }
+
+  .player-area-left {
+    left: 2px;
+  }
+
+  .player-area-right {
+    right: 2px;
+  }
+
+  .waiting-panel {
+    bottom: 90px;
+    font-size: 11px;
+    padding: 6px 12px;
+  }
+
+  .game-over-panel {
+    padding: 20px;
+  }
+
+  .game-over-panel h2 {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .final-entry {
+    padding: 6px 10px;
+    gap: 8px;
+  }
+
+  .final-score {
+    font-size: 14px;
+  }
+}

@@ -1,0 +1,273 @@
+.bidding-panel {
+  position: absolute;
+  bottom: 145px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 16px 24px;
+  min-width: 360px;
+  backdrop-filter: blur(8px);
+  z-index: 50;
+}
+
+.bidding-header h3 {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.bidding-threshold {
+  font-size: 12px;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.bids-display {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.bid-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  min-width: 64px;
+}
+
+.bid-current {
+  background: rgba(79, 195, 247, 0.15);
+  border: 1px solid var(--accent);
+}
+
+.bid-name {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.bid-value {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.bid-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bid-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.bid-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-light);
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+}
+
+.bid-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.bid-btn-selected {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+}
+
+.bid-btn-restricted {
+  background: rgba(229, 57, 53, 0.2);
+  color: var(--danger);
+  text-decoration: line-through;
+}
+
+.bid-confirm {
+  padding: 8px 20px;
+  background: var(--accent);
+  color: #000;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.bid-confirm:hover:not(:disabled) {
+  background: #81d4fa;
+}
+
+.bid-action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.suit-buttons {
+  gap: 6px;
+}
+
+.suit-btn {
+  width: 44px;
+  height: 44px;
+  font-size: 22px;
+}
+
+.suit-red {
+  color: var(--red-suit);
+}
+
+.suit-black {
+  color: var(--text-light);
+}
+
+/* Auction history log */
+.auction-history {
+  max-height: 100px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  padding: 4px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.auction-history-entry {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.auction-history-bid {
+  background: rgba(79, 195, 247, 0.1);
+}
+
+.auction-history-name {
+  color: var(--text-muted);
+  min-width: 60px;
+}
+
+.auction-history-value {
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.auction-history-entry:not(.auction-history-bid) .auction-history-value {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.waiting-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  font-style: italic;
+}
+
+/* ===== Mobile Responsive ===== */
+@media (max-width: 768px) {
+  .bidding-panel {
+    min-width: 280px;
+    max-width: 90vw;
+    padding: 12px 16px;
+    bottom: 115px;
+  }
+
+  .bidding-header h3 {
+    font-size: 14px;
+  }
+
+  .bidding-threshold {
+    font-size: 11px;
+  }
+
+  .bids-display {
+    gap: 8px;
+  }
+
+  .bid-entry {
+    min-width: 50px;
+    padding: 4px 8px;
+  }
+
+  .bid-value {
+    font-size: 15px;
+  }
+
+  .bid-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+
+  .suit-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
+  }
+
+  .bid-confirm {
+    padding: 6px 16px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bidding-panel {
+    min-width: unset;
+    width: calc(100vw - 24px);
+    max-width: 320px;
+    padding: 10px 12px;
+    bottom: 80px;
+  }
+
+  .bids-display {
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .bid-entry {
+    min-width: 44px;
+    padding: 3px 6px;
+  }
+
+  .bid-value {
+    font-size: 13px;
+  }
+
+  .bid-name {
+    font-size: 10px;
+  }
+
+  .bid-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+    border-radius: 4px;
+  }
+
+  .suit-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+  }
+
+  .bid-action-buttons {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

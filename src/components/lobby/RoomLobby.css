@@ -1,0 +1,134 @@
+.room-lobby {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, var(--table-felt) 0%, var(--table-green-dark) 100%);
+}
+
+.lobby-card {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 32px 40px;
+  text-align: center;
+  min-width: 460px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.room-code {
+  font-family: monospace;
+  font-size: 28px;
+  letter-spacing: 4px;
+  color: var(--gold);
+}
+
+.lobby-hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.lobby-loading {
+  color: var(--text-muted);
+  text-align: center;
+  padding: 40px;
+}
+
+.seat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.seat-slot {
+  padding: 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--panel-border);
+}
+
+.seat-filled {
+  border-color: var(--accent);
+}
+
+.seat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.seat-name {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.seat-type {
+  font-size: 11px;
+  color: var(--accent);
+}
+
+.seat-ai {
+  color: var(--text-muted);
+}
+
+.seat-ready {
+  font-size: 12px;
+  color: var(--danger);
+  margin-top: 4px;
+}
+
+.seat-ready.is-ready {
+  color: var(--success);
+}
+
+.seat-waiting {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 13px;
+}
+
+.lobby-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.lobby-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+
+.lobby-btn-ready {
+  background: var(--success);
+  color: #fff;
+}
+
+.lobby-btn-unready {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-light);
+}
+
+.lobby-btn-fill {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-light);
+}
+
+.lobby-btn-start {
+  background: var(--accent);
+  color: #000;
+}
+
+.lobby-btn-leave {
+  background: rgba(229, 57, 53, 0.2);
+  color: var(--danger);
+}

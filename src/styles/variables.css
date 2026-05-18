@@ -1,0 +1,53 @@
+:root {
+  /* Table colors */
+  --table-green: #1a6b37;
+  --table-green-dark: #0f4a24;
+  --table-felt: #1b7a3e;
+
+  /* Card colors */
+  --card-white: #fefefe;
+  --card-shadow: rgba(0, 0, 0, 0.3);
+  --card-width: 70px;
+  --card-height: 100px;
+  --card-radius: 7px;
+  --red-suit: #cc0000;
+  --black-suit: #1a1a1a;
+
+  /* UI colors */
+  --gold: #ffd700;
+  --gold-dim: #c9a900;
+  --text-light: #f0f0f0;
+  --text-muted: #a8a8a8;
+  --accent: #4fc3f7;
+  --accent-hover: #81d4fa;
+  --danger: #e53935;
+  --success: #43a047;
+
+  /* Panels */
+  --panel-bg: rgba(0, 0, 0, 0.55);
+  --panel-border: rgba(255, 255, 255, 0.12);
+  --panel-bg-solid: #1a2a1a;
+
+  /* Typography */
+  --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.2s ease;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  :root {
+    --card-width: 50px;
+    --card-height: 72px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --card-width: 48px;
+    --card-height: 68px;
+    --card-radius: 5px;
+  }
+}

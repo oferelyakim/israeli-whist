@@ -1,0 +1,344 @@
+.main-menu {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, var(--table-felt) 0%, var(--table-green-dark) 100%);
+  position: relative;
+}
+
+.app-version {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  user-select: none;
+}
+
+.menu-card {
+  position: relative;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 40px 48px;
+  max-width: 480px;
+  width: 90%;
+  text-align: center;
+  backdrop-filter: blur(16px);
+  max-height: 95vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.lang-toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  z-index: 10;
+}
+.lang-toggle:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.menu-photo {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 16px;
+  border: 3px solid var(--gold);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.menu-title {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.suit-deco {
+  font-size: 28px;
+  opacity: 0.7;
+}
+
+.suit-deco.red {
+  color: var(--red-suit);
+}
+
+.menu-subtitle {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: 28px;
+}
+
+/* Game selector tabs */
+.game-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.game-tab {
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  border: 1px solid var(--panel-border);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.game-tab:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-light);
+}
+
+.game-tab-active {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+}
+
+.game-tab-active:hover {
+  background: #81d4fa;
+}
+
+/* Player count selector */
+.player-count-selector {
+  margin-bottom: 16px;
+}
+
+.player-count-buttons {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.player-count-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-light);
+  border: 1px solid var(--panel-border);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.player-count-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.player-count-btn-active {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+}
+
+.player-count-btn-active:hover {
+  background: #81d4fa;
+}
+
+.menu-form {
+  margin-bottom: 24px;
+}
+
+.menu-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: left;
+}
+
+.menu-input {
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  color: var(--text-light);
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+}
+
+.menu-input:focus {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.menu-btn {
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.15s;
+}
+
+.menu-btn-primary {
+  background: linear-gradient(180deg, #5cc8f7 0%, var(--accent) 100%);
+  color: #000;
+  box-shadow: 0 2px 8px rgba(79, 195, 247, 0.3);
+}
+
+.menu-btn-primary:hover {
+  background: linear-gradient(180deg, #81d4fa 0%, #5cc8f7 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 195, 247, 0.4);
+}
+
+.menu-btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-light);
+  border: 1px solid var(--panel-border);
+}
+
+.menu-btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.join-row {
+  display: flex;
+  gap: 8px;
+}
+
+.join-input {
+  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.firebase-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.menu-error {
+  color: var(--danger);
+  font-size: 13px;
+  padding: 4px;
+}
+
+.menu-rules {
+  text-align: left;
+  border-top: 1px solid var(--panel-border);
+  padding-top: 20px;
+}
+
+.menu-rules h3 {
+  font-size: 14px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.menu-rules ul {
+  list-style: none;
+  padding: 0;
+}
+
+.menu-rules li {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 3px 0;
+  padding-left: 16px;
+  position: relative;
+}
+
+.menu-rules li::before {
+  content: '\2666';
+  position: absolute;
+  left: 0;
+  color: var(--red-suit);
+  font-size: 10px;
+}
+
+/* ===== Mobile Responsive ===== */
+@media (max-width: 768px) {
+  .menu-card {
+    padding: 28px 32px;
+  }
+
+  .menu-photo {
+    width: 120px;
+    height: 120px;
+  }
+
+  .menu-title {
+    font-size: 26px;
+  }
+
+  .suit-deco {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-card {
+    padding: 20px;
+    border-radius: 14px;
+  }
+
+  .menu-photo {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 10px;
+  }
+
+  .menu-title {
+    font-size: 22px;
+    gap: 8px;
+  }
+
+  .suit-deco {
+    font-size: 18px;
+  }
+
+  .menu-subtitle {
+    font-size: 12px;
+    margin-bottom: 20px;
+  }
+
+  .menu-btn {
+    padding: 12px 18px;
+    font-size: 14px;
+  }
+
+  .game-tab {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+}

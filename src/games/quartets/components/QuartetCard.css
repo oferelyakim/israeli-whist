@@ -1,0 +1,104 @@
+/* ===== Quartet Card ===== */
+
+.qcard {
+  width: var(--card-width, 70px);
+  height: var(--card-height, 100px);
+  border-radius: var(--card-radius, 7px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  position: relative;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+}
+
+.qcard-small {
+  --card-width: 50px;
+  --card-height: 72px;
+}
+
+.qcard-emoji {
+  font-size: 36px;
+  line-height: 1;
+  filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.qcard-emoji-small {
+  font-size: 24px;
+}
+
+/* Card back */
+.qcard-back {
+  background: linear-gradient(145deg, #2860b0, #1a4488, #163878);
+  border: 1.5px solid #163870;
+}
+
+.qcard-back-pattern {
+  font-size: 28px;
+  color: rgba(255, 255, 255, 0.2);
+  font-weight: bold;
+}
+
+.qcard-small .qcard-back-pattern {
+  font-size: 18px;
+}
+
+/* Interactive states */
+.qcard-playable {
+  cursor: pointer;
+}
+
+.qcard-playable:hover {
+  transform: translateY(-8px);
+  box-shadow: 2px 6px 12px rgba(0, 0, 0, 0.5);
+}
+
+.qcard-selected {
+  transform: translateY(-16px);
+  box-shadow: 0 0 0 3px var(--accent, #4fc3f7), 2px 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+  .qcard {
+    --card-width: 56px;
+    --card-height: 80px;
+  }
+
+  .qcard-emoji {
+    font-size: 28px;
+  }
+
+  .qcard-small {
+    --card-width: 42px;
+    --card-height: 60px;
+  }
+
+  .qcard-emoji-small {
+    font-size: 18px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .qcard {
+    --card-width: 46px;
+    --card-height: 66px;
+  }
+
+  .qcard-emoji {
+    font-size: 24px;
+  }
+
+  .qcard-small {
+    --card-width: 34px;
+    --card-height: 48px;
+  }
+
+  .qcard-emoji-small {
+    font-size: 15px;
+  }
+}
