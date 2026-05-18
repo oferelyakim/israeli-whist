@@ -112,8 +112,13 @@ Or use the `whist-dev` server in `.claude/launch.json` via `mcp__Claude_Preview_
 ### Build & deploy
 ```bash
 npm run build       # tsc -b && vite build → dist/
-firebase deploy     # deploys dist/ to Firebase Hosting (project israeli-whist)
+firebase deploy     # manual deploy to Firebase Hosting (project whist---elyakim)
 ```
+
+CI/CD: every push to `master` on GitHub auto-deploys via `.github/workflows/deploy.yml`.
+Requires `FIREBASE_SERVICE_ACCOUNT` secret in GitHub repo settings.
+GitHub: https://github.com/oferelyakim/israeli-whist
+Live: https://whist---elyakim.web.app
 
 ### Run e2e
 ```bash
