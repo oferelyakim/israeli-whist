@@ -4,6 +4,8 @@ import { GameType } from './types/game-common';
 import { GAME_REGISTRY } from './games/registry';
 import { saveSession, loadSession, clearSession } from './multiplayer/session';
 import { useTranslation } from './i18n/LanguageContext';
+import { useVersionCheck } from './hooks/useVersionCheck';
+import { UpdateBanner } from './components/common/UpdateBanner';
 
 // Lazy-load RoomLobby (it imports Firebase)
 const RoomLobby = lazy(() =>
@@ -30,6 +32,7 @@ function ReconnectingFallback() {
 }
 
 export function App() {
+  const updateAvailable = useVersionCheck();
   const [screen, setScreen] = useState<AppScreen>('menu');
   const [selectedGame, setSelectedGame] = useState<GameType>(GameType.WHIST);
   const [gameSettings, setGameSettings] = useState<any>(null);
@@ -156,25 +159,12 @@ export function App() {
 
   // ─── Render ────────────────────────────────────────────────────────────
 
-  // Reconnecting state
+  let content: React.ReactNode;
+
   if (screen === 'reconnecting') {
-    return <ReconnectingFallback />;
-  }
-
-  // Menu screen
-  if (screen === 'menu') {
-    return (
-      <MainMenu
-        onStartGame={handleStartGame}
-        onCreateRoom={handleCreateRoom}
-        onJoinRoom={handleJoinRoom}
-      />
-    );
-  }
-
-  // Lobby screen (lazy-loaded)
-  if (screen === 'lobby' && roomInfo) {
-    return (
+    content = <ReconnectingFallback />;
+  } else if (screen === 'lobby' && roomInfo) {
+    content = (
       <Suspense fallback={<LoadingFallback />}>
         <RoomLobby
           roomId={roomInfo.roomId}
@@ -186,14 +176,10 @@ export function App() {
         />
       </Suspense>
     );
-  }
-
-  // Multiplayer game screen (lazy-loaded via registry)
-  if (screen === 'multiplayer_game' && roomInfo) {
+  } else if (screen === 'multiplayer_game' && roomInfo) {
     const config = GAME_REGISTRY[selectedGame]!;
     const MultiplayerScreen = config.MultiplayerScreen;
-
-    return (
+    content = (
       <Suspense fallback={<LoadingFallback />}>
         <MultiplayerScreen
           roomId={roomInfo.roomId}
@@ -203,14 +189,10 @@ export function App() {
         />
       </Suspense>
     );
-  }
-
-  // Single-player game screen (lazy-loaded via registry)
-  if (screen === 'game' && gameSettings) {
+  } else if (screen === 'game' && gameSettings) {
     const config = GAME_REGISTRY[selectedGame]!;
     const GameScreen = config.GameScreen;
-
-    return (
+    content = (
       <Suspense fallback={<LoadingFallback />}>
         <GameScreen
           settings={gameSettings}
@@ -218,14 +200,20 @@ export function App() {
         />
       </Suspense>
     );
+  } else {
+    content = (
+      <MainMenu
+        onStartGame={handleStartGame}
+        onCreateRoom={handleCreateRoom}
+        onJoinRoom={handleJoinRoom}
+      />
+    );
   }
 
-  // Fallback
   return (
-    <MainMenu
-      onStartGame={handleStartGame}
-      onCreateRoom={handleCreateRoom}
-      onJoinRoom={handleJoinRoom}
-    />
+    <>
+      {content}
+      {updateAvailable && <UpdateBanner />}
+    </>
   );
 }

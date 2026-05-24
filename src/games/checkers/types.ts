@@ -3,7 +3,12 @@ import { GameType } from '../../types/game-common';
 
 export interface CheckersSettings extends BaseGameSettings {
   gameType: GameType.CHECKERS;
+  difficulty?: 1 | 2 | 3;
 }
+
+export const CHECKERS_DEFAULTS = {
+  difficulty: 2 as 1 | 2 | 3,
+} as const;
 
 export type PieceColor = 'red' | 'black';
 

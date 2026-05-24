@@ -12,6 +12,19 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    // Emit version.json so the running app can detect a newer deploy.
+    // The file is NOT in the service worker glob patterns (no .json), so it
+    // is always fetched from the network — no cache staleness risk.
+    {
+      name: 'emit-version-json',
+      generateBundle() {
+        this.emitFile({
+          type: 'asset',
+          fileName: 'version.json',
+          source: JSON.stringify({ version: pkg.version }),
+        });
+      },
+    },
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],

@@ -65,6 +65,11 @@ const GAME_I18N: Record<GameType, { name: TranslationKey; description: Translati
     description: 'registry.woodoku.description',
     rules: ['registry.woodoku.rule1', 'registry.woodoku.rule2', 'registry.woodoku.rule3', 'registry.woodoku.rule4'],
   },
+  [GameType.ESCAPE_ROOM]: {
+    name: 'registry.escapeRoom.name',
+    description: 'registry.escapeRoom.description',
+    rules: ['registry.escapeRoom.rule1', 'registry.escapeRoom.rule2', 'registry.escapeRoom.rule3', 'registry.escapeRoom.rule4'],
+  },
 };
 
 interface MainMenuProps {
@@ -145,6 +150,16 @@ export function MainMenu({ onStartGame, onCreateRoom, onJoinRoom }: MainMenuProp
     if (selectedGame === GameType.WOODOKU) {
       onStartGame(GameType.WOODOKU, {
         gameType: GameType.WOODOKU,
+        numPlayers: 1,
+        playerNames: [playerName],
+        playerTypes: [PlayerType.HUMAN],
+      });
+      return;
+    }
+
+    if (selectedGame === GameType.ESCAPE_ROOM) {
+      onStartGame(GameType.ESCAPE_ROOM, {
+        gameType: GameType.ESCAPE_ROOM,
         numPlayers: 1,
         playerNames: [playerName],
         playerTypes: [PlayerType.HUMAN],
@@ -393,12 +408,12 @@ export function MainMenu({ onStartGame, onCreateRoom, onJoinRoom }: MainMenuProp
 
         <div className="menu-buttons">
           <button className="menu-btn menu-btn-primary" onClick={handleSinglePlayer}>
-            {(selectedGame === GameType.SOLITAIRE || selectedGame === GameType.WOODOKU)
+            {(selectedGame === GameType.SOLITAIRE || selectedGame === GameType.WOODOKU || selectedGame === GameType.ESCAPE_ROOM)
               ? t('solitaire.play')
               : t('menu.playVsAI')}
           </button>
 
-          {firebaseReady && selectedGame !== GameType.SOLITAIRE && selectedGame !== GameType.WOODOKU ? (
+          {firebaseReady && selectedGame !== GameType.SOLITAIRE && selectedGame !== GameType.WOODOKU && selectedGame !== GameType.ESCAPE_ROOM ? (
             <>
               <button
                 className="menu-btn menu-btn-secondary"
@@ -435,7 +450,7 @@ export function MainMenu({ onStartGame, onCreateRoom, onJoinRoom }: MainMenuProp
                 </div>
               )}
             </>
-          ) : selectedGame !== GameType.SOLITAIRE && selectedGame !== GameType.WOODOKU ? (
+          ) : selectedGame !== GameType.SOLITAIRE && selectedGame !== GameType.WOODOKU && selectedGame !== GameType.ESCAPE_ROOM ? (
             <p className="firebase-hint">
               {t('menu.firebaseHint')}
             </p>

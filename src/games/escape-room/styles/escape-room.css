@@ -1,0 +1,348 @@
+.er-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg, #0f1115);
+  color: var(--fg, #e6e6e6);
+  padding: 12px;
+  gap: 12px;
+}
+
+.er-shell__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+}
+
+.er-shell__stage {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.er-shell__timer {
+  font-variant-numeric: tabular-nums;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.er-shell__controls {
+  display: flex;
+  gap: 8px;
+}
+
+.er-shell__body {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 20px;
+}
+
+.er-paused {
+  text-align: center;
+  padding-top: 30vh;
+}
+
+.er-paused__title {
+  font-size: 22px;
+  margin-bottom: 16px;
+  opacity: 0.9;
+}
+
+.er-btn {
+  cursor: pointer;
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-weight: 500;
+  transition: background 0.15s, transform 0.05s;
+}
+
+.er-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.er-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.er-btn--primary {
+  background: var(--accent, #4f8cff);
+  color: #fff;
+}
+
+.er-btn--primary:hover:not(:disabled) {
+  background: var(--accent-hover, #6ba0ff);
+}
+
+.er-btn--ghost {
+  background: transparent;
+  color: var(--fg, #e6e6e6);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.er-btn--ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.er-padlock,
+.er-anagram,
+.er-numseq,
+.er-caesar {
+  width: 100%;
+  max-width: 540px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.er-padlock__title,
+.er-anagram__title,
+.er-numseq__title,
+.er-caesar__title {
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.er-padlock__subtitle,
+.er-caesar__prompt {
+  font-size: 13px;
+  opacity: 0.75;
+  text-align: center;
+}
+
+.er-padlock__clues {
+  list-style: disc;
+  padding-inline-start: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+}
+
+.er-padlock__inputRow {
+  display: flex;
+  gap: 8px;
+}
+
+.er-padlock__input {
+  flex: 1;
+  font-size: 20px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  letter-spacing: 4px;
+}
+
+.er-padlock__input:focus-visible {
+  outline: 2px solid var(--accent, #4f8cff);
+  outline-offset: 2px;
+}
+
+.er-anagram__scrambled {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.er-anagram__tile {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 22px;
+  font-weight: 700;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  min-width: 40px;
+  text-align: center;
+}
+
+.er-numseq__row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.er-numseq__tile {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  min-width: 44px;
+  text-align: center;
+}
+
+.er-numseq__tile--mystery {
+  background: rgba(79, 140, 255, 0.18);
+  color: var(--accent, #4f8cff);
+  border: 1px dashed rgba(79, 140, 255, 0.5);
+}
+
+.er-numseq__sep {
+  opacity: 0.5;
+  font-size: 18px;
+}
+
+.er-caesar__cipher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.er-caesar__tile {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 20px;
+  font-weight: 700;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  min-width: 28px;
+  text-align: center;
+}
+
+.er-caesar__tile--space {
+  background: transparent;
+  opacity: 0.4;
+  min-width: 12px;
+}
+
+.er-padlock__input--text {
+  letter-spacing: 2px;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  text-transform: uppercase;
+}
+
+.er-feedback {
+  font-size: 13px;
+  color: #f6b85a;
+  text-align: center;
+}
+
+.er-hints {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.er-hints__label {
+  font-size: 12px;
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.er-hints ul {
+  margin: 0;
+  padding-inline-start: 18px;
+  font-size: 13px;
+}
+
+.er-stageSolved {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 14px;
+  background: rgba(80, 200, 120, 0.15);
+  border-radius: 8px;
+}
+
+.er-stageSolved__msg {
+  font-weight: 600;
+  color: #50c878;
+}
+
+.er-roundComplete {
+  max-width: 720px;
+  margin: 30px auto;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--fg, #e6e6e6);
+}
+
+.er-roundComplete__title {
+  font-size: 26px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.er-roundComplete__score {
+  font-size: 20px;
+  text-align: center;
+  color: var(--accent, #4f8cff);
+}
+
+.er-roundComplete__time {
+  text-align: center;
+  opacity: 0.8;
+}
+
+.er-roundComplete__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.er-roundComplete__table th,
+.er-roundComplete__table td {
+  padding: 6px 8px;
+  text-align: start;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.er-roundComplete__table th {
+  opacity: 0.7;
+  font-weight: 500;
+}
+
+.er-roundComplete__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.er-error {
+  color: #ff6b6b;
+  padding: 16px;
+  text-align: center;
+}
+
+@media (max-width: 599px) {
+  .er-padlock,
+  .er-anagram {
+    padding: 14px;
+  }
+  .er-anagram__tile {
+    padding: 8px 10px;
+    font-size: 18px;
+    min-width: 32px;
+  }
+  .er-padlock__input {
+    font-size: 18px;
+  }
+}

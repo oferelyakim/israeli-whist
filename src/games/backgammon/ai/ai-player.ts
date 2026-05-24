@@ -244,7 +244,8 @@ interface SeqResult {
 function bestSequence(
   gameState: BackgammonGameState,
   color: BgColor,
-  limit: number
+  limit: number,
+  evalOrdering: boolean
 ): SeqResult | null {
   let best: SeqResult | null = null;
   let explored = 0;
@@ -291,19 +292,30 @@ function bestSequence(
     }
   }
 
-  // Move ordering for Hard: hits first, then making points, then pip movers
   const initMoves = getLegalMoves(gameState.state, color);
+  const opp: BgColor = color === 'white' ? 'black' : 'white';
 
   function quickScore(m: typeof initMoves[0]): number {
     if (m.to === -1) return 3; // bear-off
     const targetPoint = gameState.state.board[m.to];
-    const opp: BgColor = color === 'white' ? 'black' : 'white';
     if (targetPoint.color === opp && targetPoint.count === 1) return 2; // hit
     if (targetPoint.color === color && targetPoint.count >= 1) return 1; // make point
     return 0;
   }
 
-  const sortedMoves = [...initMoves].sort((a, b) => quickScore(b) - quickScore(a));
+  // Hard mode: rank first-level moves by 1-ply evaluation so the DFS
+  // explores the most promising lines first and prunes poor ones earlier.
+  const sortedMoves = evalOrdering
+    ? [...initMoves].sort((a, b) => {
+        const applyFirst = (m: typeof initMoves[0]): number => {
+          const action: BackgammonAction = m.via !== undefined
+            ? { type: 'COMBINED_MOVE', from: m.from, via: m.via, to: m.to }
+            : { type: 'MOVE_CHECKER', from: m.from, to: m.to };
+          return evaluatePosition(backgammonReducer(gameState, action).state, color);
+        };
+        return applyFirst(b) - applyFirst(a);
+      })
+    : [...initMoves].sort((a, b) => quickScore(b) - quickScore(a));
 
   for (const m of sortedMoves) {
     explored++;
@@ -370,28 +382,19 @@ export function getBgAIAction(
     return { type: 'ROLL_DICE', seed: (Math.random() * 1e9) | 0 };
   }
 
-  const color     = bgState.turn;
+  const color      = bgState.turn;
   const legalMoves = getLegalMoves(bgState, color);
 
   if (legalMoves.length === 0) return { type: 'PASS_TURN' };
 
-  // Easy: random
+  // Low: DFS with small node budget + heuristic fallback (was Medium)
   if (difficulty === 1) {
-    const m = legalMoves[Math.floor(Math.random() * legalMoves.length)];
-    return m.via !== undefined
-      ? { type: 'COMBINED_MOVE', from: m.from, via: m.via, to: m.to }
-      : { type: 'MOVE_CHECKER', from: m.from, to: m.to };
-  }
-
-  // Medium: full-turn DFS with moderate node budget
-  if (difficulty === 2) {
-    const seq = bestSequence(gameState, color, 400);
+    const seq = bestSequence(gameState, color, 400, false);
     if (!seq) {
-      // Fallback to per-move heuristic
       let bestScore = -Infinity;
       let bestMove  = legalMoves[0];
       for (const move of legalMoves) {
-        if (move.via !== undefined) continue; // skip combined for heuristic fallback
+        if (move.via !== undefined) continue;
         const sc = scoreMoveHeuristic(gameState, move.from, move.to);
         if (sc > bestScore) { bestScore = sc; bestMove = move; }
       }
@@ -404,8 +407,17 @@ export function getBgAIAction(
       : { type: 'MOVE_CHECKER', from: seq.firstFrom, to: seq.firstTo };
   }
 
-  // Hard: full-turn DFS with larger budget + move ordering
-  const seq = bestSequence(gameState, color, 2000);
+  // Medium: DFS 2000 nodes + categorical move ordering (was Hard)
+  if (difficulty === 2) {
+    const seq = bestSequence(gameState, color, 2000, false);
+    if (!seq) return { type: 'PASS_TURN' };
+    return seq.firstVia !== undefined
+      ? { type: 'COMBINED_MOVE', from: seq.firstFrom, via: seq.firstVia, to: seq.firstTo }
+      : { type: 'MOVE_CHECKER', from: seq.firstFrom, to: seq.firstTo };
+  }
+
+  // Hard: DFS 5000 nodes + 1-ply evaluation-based move ordering
+  const seq = bestSequence(gameState, color, 5000, true);
   if (!seq) return { type: 'PASS_TURN' };
   return seq.firstVia !== undefined
     ? { type: 'COMBINED_MOVE', from: seq.firstFrom, via: seq.firstVia, to: seq.firstTo }

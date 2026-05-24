@@ -15,7 +15,20 @@
       "Bash(node /tmp/test-layoff.mjs)",
       "WebFetch(domain:www.thesprucecrafts.com)",
       "WebSearch",
-      "Bash(git -C \"C:\\\\tmp\\\\israeli-whist\" status)"
+      "Bash(git -C \"C:\\\\tmp\\\\israeli-whist\" status)",
+      "PowerShell(gh auth status 2>&1)",
+      "Bash(where gh *)",
+      "Bash(cmd /c \"where gh\")",
+      "Read(//c/Program Files/GitHub CLI//**)",
+      "Read(//c/Program Files/GitHub CLI/**)",
+      "Read(//c/Users/**)",
+      "Bash(git -C \"C:/tmp/israeli-whist\" diff HEAD --name-only)",
+      "Bash(git -C \"C:/tmp/israeli-whist\" status --short)",
+      "Bash(firebase init *)",
+      "Bash(firebase login:ci)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'chore\\(ci\\): add GitHub Actions deploy workflow to Firebase Hosting *)",
+      "Bash(git commit -m 'docs\\(ci\\): update CLAUDE.md with GitHub repo + auto-deploy workflow *)"
     ]
   }
 }

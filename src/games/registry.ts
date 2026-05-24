@@ -169,4 +169,20 @@ export const GAME_REGISTRY: Partial<Record<GameType, GameConfig>> = {
   },
   // Woodoku hidden from menu — work in progress, will be re-added later
   // [GameType.WOODOKU]: { ... }
+  [GameType.ESCAPE_ROOM]: {
+    type: GameType.ESCAPE_ROOM,
+    displayName: 'registry.escapeRoom.name',
+    minPlayers: 1,
+    maxPlayers: 1,
+    defaultPlayers: 1,
+    description: 'registry.escapeRoom.description',
+    rulesSnippet: [
+      'registry.escapeRoom.rule1',
+      'registry.escapeRoom.rule2',
+      'registry.escapeRoom.rule3',
+      'registry.escapeRoom.rule4',
+    ],
+    GameScreen: lazy(() => import('./escape-room/components/EscapeRoomGameScreen')),
+    MultiplayerScreen: lazy(() => import('./escape-room/components/EscapeRoomMultiplayerScreen')),
+  },
 };

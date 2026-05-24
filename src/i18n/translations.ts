@@ -33,6 +33,8 @@ export const en = {
   'common.reshuffleMenu': 'Exit to Menu',
   'common.yes': 'Yes',
   'common.cancel': 'Cancel',
+  'common.updateAvailable': 'New version available',
+  'common.updateRefresh': 'Update',
 
   // Bot names
   'bot.name1': 'Bot Alice',
@@ -445,6 +447,12 @@ export const en = {
   'checkers.noMultiplayer': 'Checkers multiplayer coming soon!',
   'checkers.scores': 'Score — You: {you}  Opponent: {opp}',
   'checkers.king': 'King',
+  'checkers.settings': 'Settings',
+  'checkers.settingDifficulty': 'AI difficulty',
+  'checkers.diffEasy': 'Easy',
+  'checkers.diffMedium': 'Medium',
+  'checkers.diffHard': 'Hard',
+  'checkers.exitConfirm': 'Exit to main menu?',
 
   // Game registry - Woodoku
   'registry.woodoku.name': 'Woodoku',
@@ -485,6 +493,107 @@ export const en = {
   'ginRummy.undercut': 'Undercut!',
   'ginRummy.playAgain': 'Play Again',
   'ginRummy.moves': 'Moves: {n}',
+
+  // Game registry - Escape Room
+  'registry.escapeRoom.name': 'Escape Room',
+  'registry.escapeRoom.description': 'Solo puzzle game — solve a series of riddles against the clock',
+  'registry.escapeRoom.rule1': 'Solo play — solve each stage to advance',
+  'registry.escapeRoom.rule2': 'Hints are available, but cost you points',
+  'registry.escapeRoom.rule3': 'Wrong answers cost a small retry penalty',
+  'registry.escapeRoom.rule4': 'Finish all stages to complete the round',
+
+  // Escape Room shell
+  'escape.noMultiplayer': 'Escape Room is a single-player game.',
+  'escape.stageOf': 'Stage {current} of {total}',
+  'escape.pause': 'Pause',
+  'escape.resume': 'Resume',
+  'escape.pausedTitle': 'Paused',
+  'escape.abandon': 'Exit',
+  'escape.stageSolved': 'Solved!',
+  'escape.nextStage': 'Next Stage',
+  'escape.finishRound': 'Finish Round',
+  'escape.submit': 'Submit',
+  'escape.hintButton': 'Get a Hint',
+  'escape.hintsRevealed': 'Hints',
+  'escape.round.001.name': 'Round 1 — Classic',
+
+  // Escape Room — round complete
+  'escape.roundComplete.title': 'Round Complete',
+  'escape.roundComplete.totalScore': 'Total Score: {n}',
+  'escape.roundComplete.totalTime': 'Total Time: {time}',
+  'escape.roundComplete.retry': 'Retry (new puzzles)',
+  'escape.roundComplete.col.stage': 'Stage',
+  'escape.roundComplete.col.archetype': 'Puzzle',
+  'escape.roundComplete.col.time': 'Time',
+  'escape.roundComplete.col.hints': 'Hints',
+  'escape.roundComplete.col.retries': 'Retries',
+  'escape.roundComplete.col.score': 'Score',
+
+  // Escape Room — archetype short names
+  'escape.archetype.multi-clue-padlock.short': 'Padlock',
+  'escape.archetype.anagram.short': 'Anagram',
+  'escape.archetype.number-sequence.short': 'Sequence',
+  'escape.archetype.caesar-cipher.short': 'Cipher',
+
+  // Escape Room — Padlock archetype
+  'escape.padlock.title': 'Crack the code',
+  'escape.padlock.subtitle': 'Use the clues below to find the {n}-digit code.',
+  'escape.padlock.inputAria': 'Enter the {n}-digit code',
+  'escape.padlock.feedback.wrongLength': 'Not the right number of digits.',
+  'escape.padlock.feedback.partial': 'Some digits are right — keep trying.',
+  'escape.padlock.clue.sumEquals': 'The digits add up to {n}.',
+  'escape.padlock.clue.productEquals': 'The product of the digits is {n}.',
+  'escape.padlock.clue.parityEven': 'Position {pos} is an even digit.',
+  'escape.padlock.clue.parityOdd': 'Position {pos} is an odd digit.',
+  'escape.padlock.clue.digitAt': 'Position {pos} is the digit {digit}.',
+  'escape.padlock.clue.rangeAt': 'Position {pos} is between {min} and {max} (inclusive).',
+  'escape.padlock.clue.allDifferent': 'All digits in the code are different.',
+  'escape.padlock.clue.allSame': 'Every digit in the code is the same.',
+  'escape.padlock.clue.containsDigit': 'The code contains the digit {digit}.',
+  'escape.padlock.clue.noDigit': 'The code does not contain the digit {digit}.',
+  'escape.padlock.clue.compareGt': 'Position {posA} is greater than position {posB}.',
+  'escape.padlock.clue.compareLt': 'Position {posA} is less than position {posB}.',
+  'escape.padlock.clue.compareEq': 'Position {posA} equals position {posB}.',
+  'escape.padlock.clue.diffAbs': 'Positions {posA} and {posB} differ by exactly {diff}.',
+  'escape.padlock.clue.countOf': 'The digit {digit} appears {n} times in the code.',
+  'escape.padlock.hint.reveal': 'Revealed so far: {masked}',
+
+  // Escape Room — Anagram archetype
+  'escape.anagram.title': 'Unscramble the word',
+  'escape.anagram.scrambledAria': 'Scrambled letters',
+  'escape.anagram.inputAria': 'Type the unscrambled word',
+  'escape.anagram.feedback.wrongLength': 'Wrong length — use every letter.',
+  'escape.anagram.feedback.sameLetters': 'Right letters, wrong order.',
+  'escape.anagram.feedback.try': 'Not quite — try again.',
+  'escape.anagram.hint.reveal': 'Revealed so far: {masked}',
+
+  // Escape Room — Number Sequence archetype
+  'escape.numseq.title': 'What comes next?',
+  'escape.numseq.placeholder': 'Next number',
+  'escape.numseq.inputAria': 'Type the next number in the sequence',
+  'escape.numseq.feedback.empty': 'Enter a number to submit.',
+  'escape.numseq.feedback.notANumber': 'That is not a valid number.',
+  'escape.numseq.feedback.try': 'Not the next term — try again.',
+  'escape.numseq.parityEven': 'even',
+  'escape.numseq.parityOdd': 'odd',
+  'escape.numseq.signNegative': 'negative',
+  'escape.numseq.signPositive': 'positive',
+  'escape.numseq.hint.family': 'Pattern type: {family}.',
+  'escape.numseq.hint.shape': 'The answer is {parity} and {sign}.',
+  'escape.numseq.hint.reveal': 'The answer is {n}.',
+
+  // Escape Room — Caesar Cipher archetype
+  'escape.caesar.title': 'Decode the message',
+  'escape.caesar.promptKnownShift': 'Each letter has been shifted forward by {n}. Decode the word.',
+  'escape.caesar.promptUnknownShift': 'Each letter has been shifted by an unknown amount. Decode the message.',
+  'escape.caesar.placeholder': 'Decoded text',
+  'escape.caesar.inputAria': 'Type the decoded text',
+  'escape.caesar.feedback.empty': 'Enter your guess.',
+  'escape.caesar.feedback.wrongLength': 'Length does not match the encoded text.',
+  'escape.caesar.feedback.try': 'Not quite — try again.',
+  'escape.caesar.hint.firstLetter': 'The first letter is {letter}.',
+  'escape.caesar.hint.shift': 'The shift is {n}.',
+  'escape.caesar.hint.reveal': 'The answer is: {plaintext}',
 } as const;
 
 // ─── Hebrew ────────────────────────────────────────────────────────────────
@@ -518,6 +627,8 @@ export const he: Record<TranslationKey, string> = {
   'common.reshuffleMenu': 'יציאה לתפריט',
   'common.yes': 'כן',
   'common.cancel': 'ביטול',
+  'common.updateAvailable': 'גרסה חדשה זמינה',
+  'common.updateRefresh': 'עדכן',
 
   // Bot names
   'bot.name1': 'בוט אלון',
@@ -930,6 +1041,12 @@ export const he: Record<TranslationKey, string> = {
   'checkers.noMultiplayer': 'מולטיפלייר דמקה בקרוב!',
   'checkers.scores': 'ניקוד — אתה: {you}  יריב: {opp}',
   'checkers.king': 'מלך',
+  'checkers.settings': 'הגדרות',
+  'checkers.settingDifficulty': 'רמת קושי',
+  'checkers.diffEasy': 'קל',
+  'checkers.diffMedium': 'בינוני',
+  'checkers.diffHard': 'קשה',
+  'checkers.exitConfirm': 'לצאת לתפריט הראשי?',
 
   // Game registry - Woodoku (Hebrew)
   'registry.woodoku.name': 'וודוקו',
@@ -970,6 +1087,107 @@ export const he: Record<TranslationKey, string> = {
   'ginRummy.undercut': '!אנדרקאט',
   'ginRummy.playAgain': 'שחק שוב',
   'ginRummy.moves': 'מהלכים: {n}',
+
+  // Game registry - Escape Room
+  'registry.escapeRoom.name': 'חדר בריחה',
+  'registry.escapeRoom.description': 'משחק חידות לשחקן יחיד — פתור שלבים בקצב מהיר',
+  'registry.escapeRoom.rule1': 'משחק יחיד — פתור כל שלב כדי להתקדם',
+  'registry.escapeRoom.rule2': 'יש רמזים זמינים, אך הם עולים נקודות',
+  'registry.escapeRoom.rule3': 'תשובה שגויה מורידה ניקוד קטן',
+  'registry.escapeRoom.rule4': 'סיים את כל השלבים כדי להשלים את הסיבוב',
+
+  // Escape Room shell
+  'escape.noMultiplayer': 'חדר בריחה הוא משחק לשחקן יחיד.',
+  'escape.stageOf': 'שלב {current} מתוך {total}',
+  'escape.pause': 'השהיה',
+  'escape.resume': 'המשך',
+  'escape.pausedTitle': 'מושהה',
+  'escape.abandon': 'יציאה',
+  'escape.stageSolved': '!נפתר',
+  'escape.nextStage': 'שלב הבא',
+  'escape.finishRound': 'סיים סיבוב',
+  'escape.submit': 'שלח',
+  'escape.hintButton': 'קבל רמז',
+  'escape.hintsRevealed': 'רמזים',
+  'escape.round.001.name': 'סיבוב 1 — קלאסי',
+
+  // Escape Room — round complete
+  'escape.roundComplete.title': 'הסיבוב הושלם',
+  'escape.roundComplete.totalScore': 'ניקוד כולל: {n}',
+  'escape.roundComplete.totalTime': 'זמן כולל: {time}',
+  'escape.roundComplete.retry': 'נסה שוב (חידות חדשות)',
+  'escape.roundComplete.col.stage': 'שלב',
+  'escape.roundComplete.col.archetype': 'חידה',
+  'escape.roundComplete.col.time': 'זמן',
+  'escape.roundComplete.col.hints': 'רמזים',
+  'escape.roundComplete.col.retries': 'ניסיונות',
+  'escape.roundComplete.col.score': 'ניקוד',
+
+  // Escape Room — archetype short names
+  'escape.archetype.multi-clue-padlock.short': 'מנעול',
+  'escape.archetype.anagram.short': 'אנגרמה',
+  'escape.archetype.number-sequence.short': 'סדרה',
+  'escape.archetype.caesar-cipher.short': 'צופן',
+
+  // Escape Room — Padlock archetype
+  'escape.padlock.title': 'פיצוח הקוד',
+  'escape.padlock.subtitle': 'השתמש ברמזים שלהלן כדי למצוא את הקוד בן {n} הספרות.',
+  'escape.padlock.inputAria': 'הכנס קוד בן {n} ספרות',
+  'escape.padlock.feedback.wrongLength': 'מספר הספרות אינו נכון.',
+  'escape.padlock.feedback.partial': 'חלק מהספרות נכונות — המשך לנסות.',
+  'escape.padlock.clue.sumEquals': 'סכום הספרות הוא {n}.',
+  'escape.padlock.clue.productEquals': 'מכפלת הספרות היא {n}.',
+  'escape.padlock.clue.parityEven': 'הספרה במיקום {pos} זוגית.',
+  'escape.padlock.clue.parityOdd': 'הספרה במיקום {pos} אי-זוגית.',
+  'escape.padlock.clue.digitAt': 'במיקום {pos} הספרה היא {digit}.',
+  'escape.padlock.clue.rangeAt': 'הספרה במיקום {pos} בין {min} ל-{max} (כולל).',
+  'escape.padlock.clue.allDifferent': 'כל הספרות בקוד שונות זו מזו.',
+  'escape.padlock.clue.allSame': 'כל הספרות בקוד זהות.',
+  'escape.padlock.clue.containsDigit': 'הקוד מכיל את הספרה {digit}.',
+  'escape.padlock.clue.noDigit': 'הקוד אינו מכיל את הספרה {digit}.',
+  'escape.padlock.clue.compareGt': 'הספרה במיקום {posA} גדולה מהספרה במיקום {posB}.',
+  'escape.padlock.clue.compareLt': 'הספרה במיקום {posA} קטנה מהספרה במיקום {posB}.',
+  'escape.padlock.clue.compareEq': 'הספרה במיקום {posA} שווה לספרה במיקום {posB}.',
+  'escape.padlock.clue.diffAbs': 'הפרש בין מיקומים {posA} ו-{posB} הוא {diff}.',
+  'escape.padlock.clue.countOf': 'הספרה {digit} מופיעה {n} פעמים בקוד.',
+  'escape.padlock.hint.reveal': 'נחשף עד כה: {masked}',
+
+  // Escape Room — Anagram archetype
+  'escape.anagram.title': 'פענח את המילה',
+  'escape.anagram.scrambledAria': 'אותיות מעורבבות',
+  'escape.anagram.inputAria': 'הקלד את המילה הפענחת',
+  'escape.anagram.feedback.wrongLength': 'אורך שגוי — השתמש בכל האותיות.',
+  'escape.anagram.feedback.sameLetters': 'האותיות נכונות, אך הסדר שגוי.',
+  'escape.anagram.feedback.try': 'לא בדיוק — נסה שוב.',
+  'escape.anagram.hint.reveal': 'נחשף עד כה: {masked}',
+
+  // Escape Room — Number Sequence archetype
+  'escape.numseq.title': '?מה בא בהמשך',
+  'escape.numseq.placeholder': 'המספר הבא',
+  'escape.numseq.inputAria': 'הקלד את המספר הבא בסדרה',
+  'escape.numseq.feedback.empty': 'הקלד מספר כדי לשלוח.',
+  'escape.numseq.feedback.notANumber': 'זה לא מספר תקין.',
+  'escape.numseq.feedback.try': 'לא האיבר הבא — נסה שוב.',
+  'escape.numseq.parityEven': 'זוגי',
+  'escape.numseq.parityOdd': 'אי-זוגי',
+  'escape.numseq.signNegative': 'שלילי',
+  'escape.numseq.signPositive': 'חיובי',
+  'escape.numseq.hint.family': 'סוג התבנית: {family}.',
+  'escape.numseq.hint.shape': 'התשובה היא {parity} ו{sign}.',
+  'escape.numseq.hint.reveal': 'התשובה היא {n}.',
+
+  // Escape Room — Caesar Cipher archetype
+  'escape.caesar.title': 'פענח את ההודעה',
+  'escape.caesar.promptKnownShift': 'כל אות הוזזה קדימה ב-{n}. פענח את המילה.',
+  'escape.caesar.promptUnknownShift': 'כל אות הוזזה בכמות לא ידועה. פענח את ההודעה.',
+  'escape.caesar.placeholder': 'הטקסט המפוענח',
+  'escape.caesar.inputAria': 'הקלד את הטקסט המפוענח',
+  'escape.caesar.feedback.empty': 'הקלד את הניחוש שלך.',
+  'escape.caesar.feedback.wrongLength': 'האורך אינו תואם לטקסט המוצפן.',
+  'escape.caesar.feedback.try': 'לא בדיוק — נסה שוב.',
+  'escape.caesar.hint.firstLetter': 'האות הראשונה היא {letter}.',
+  'escape.caesar.hint.shift': 'ההזזה היא {n}.',
+  'escape.caesar.hint.reveal': 'התשובה היא: {plaintext}',
 };
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {

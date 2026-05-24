@@ -9,8 +9,9 @@ import {
   countPieces,
 } from '../engine/board';
 
-const MINIMAX_DEPTH = 5;
+const DEPTH_BY_DIFFICULTY: Record<1 | 2 | 3, number> = { 1: 2, 2: 4, 3: 6 };
 
+// Standard evaluation used at Easy/Medium depth
 function evaluate(board: Board): number {
   const { red, redKings, black, blackKings } = countPieces(board);
   let score = (red * 1.0 + redKings * 1.5) - (black * 1.0 + blackKings * 1.5);
@@ -21,6 +22,40 @@ function evaluate(board: Board): number {
       const cell = board[row][col];
       if (cell) {
         score += cell.color === 'red' ? 0.1 : -0.1;
+      }
+    }
+  }
+
+  return score;
+}
+
+// Richer evaluation used at Hard depth (kings worth more, positional bonuses)
+function evaluateHard(board: Board): number {
+  const { red, redKings, black, blackKings } = countPieces(board);
+  let score = (red * 1.0 + redKings * 1.65) - (black * 1.0 + blackKings * 1.65);
+
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const piece = board[row][col];
+      if (!piece) continue;
+      const sign = piece.color === 'red' ? 1 : -1;
+
+      if (!piece.king) {
+        // Advancement: closer to promotion row = more valuable
+        const advance = piece.color === 'red' ? (7 - row) : row;
+        score += sign * advance * 0.04;
+        // Back-row anchor: last piece in back row prevents easy promotions
+        const isBack = piece.color === 'red' ? row === 7 : row === 0;
+        if (isBack) score += sign * 0.25;
+      } else {
+        // King centrality: central kings control more squares
+        const centerDist = Math.abs(row - 3.5) + Math.abs(col - 3.5);
+        score += sign * (7 - centerDist) * 0.04;
+      }
+
+      // Broad center bonus for all pieces
+      if (row >= 2 && row <= 5 && col >= 2 && col <= 5) {
+        score += sign * 0.12;
       }
     }
   }
@@ -93,9 +128,10 @@ function minimax(
   depth: number,
   alpha: number,
   beta: number,
-  isMaximizing: boolean
+  isMaximizing: boolean,
+  useHardEval: boolean
 ): number {
-  if (depth === 0) return evaluate(board);
+  if (depth === 0) return useHardEval ? evaluateHard(board) : evaluate(board);
 
   const moves = generateMoves(board, turn);
   if (moves.length === 0) {
@@ -110,13 +146,12 @@ function minimax(
 
       let value: number;
       if (continueFrom !== null) {
-        // Multi-jump: same player continues
-        value = minimax(nextBoard, turn, depth - 1, alpha, beta, isMaximizing);
+        value = minimax(nextBoard, turn, depth - 1, alpha, beta, isMaximizing, useHardEval);
       } else {
         if (!hasAnyMoves(nextBoard, opponent(turn))) {
           value = Infinity;
         } else {
-          value = minimax(nextBoard, opponent(turn), depth - 1, alpha, beta, false);
+          value = minimax(nextBoard, opponent(turn), depth - 1, alpha, beta, false, useHardEval);
         }
       }
 
@@ -132,12 +167,12 @@ function minimax(
 
       let value: number;
       if (continueFrom !== null) {
-        value = minimax(nextBoard, turn, depth - 1, alpha, beta, isMaximizing);
+        value = minimax(nextBoard, turn, depth - 1, alpha, beta, isMaximizing, useHardEval);
       } else {
         if (!hasAnyMoves(nextBoard, opponent(turn))) {
           value = -Infinity;
         } else {
-          value = minimax(nextBoard, opponent(turn), depth - 1, alpha, beta, true);
+          value = minimax(nextBoard, opponent(turn), depth - 1, alpha, beta, true, useHardEval);
         }
       }
 
@@ -149,11 +184,17 @@ function minimax(
   }
 }
 
-export function getCheckersAIAction(state: CheckersGameState): CheckersAction | null {
+export function getCheckersAIAction(
+  state: CheckersGameState,
+  difficulty: 1 | 2 | 3 = 2
+): CheckersAction | null {
   const { board, turn } = state.state;
 
   const moves = generateMoves(board, turn);
   if (moves.length === 0) return null;
+
+  const depth = DEPTH_BY_DIFFICULTY[difficulty];
+  const useHardEval = difficulty === 3;
 
   // Black maximizes, red minimizes (evaluation: positive = red advantage)
   const isMaximizing = turn === 'black';
@@ -166,13 +207,13 @@ export function getCheckersAIAction(state: CheckersGameState): CheckersAction | 
 
     let score: number;
     if (continueFrom !== null) {
-      score = minimax(nextBoard, turn, MINIMAX_DEPTH - 1, -Infinity, Infinity, isMaximizing);
+      score = minimax(nextBoard, turn, depth - 1, -Infinity, Infinity, isMaximizing, useHardEval);
     } else {
       const nextTurn = opponent(turn);
       if (!hasAnyMoves(nextBoard, nextTurn)) {
         score = isMaximizing ? Infinity : -Infinity;
       } else {
-        score = minimax(nextBoard, nextTurn, MINIMAX_DEPTH - 1, -Infinity, Infinity, !isMaximizing);
+        score = minimax(nextBoard, nextTurn, depth - 1, -Infinity, Infinity, !isMaximizing, useHardEval);
       }
     }
 

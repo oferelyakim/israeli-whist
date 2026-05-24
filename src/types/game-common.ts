@@ -12,6 +12,7 @@ export enum GameType {
   BACKGAMMON = 'BACKGAMMON',
   CHECKERS = 'CHECKERS',
   WOODOKU = 'WOODOKU',
+  ESCAPE_ROOM = 'ESCAPE_ROOM',
 }
 
 export enum PlayerType {

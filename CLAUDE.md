@@ -1,10 +1,11 @@
 # Israeli-Whist (multi-game card app)
 
-Vite + React 19 + TypeScript card-game suite. Nine game modes share a common
+Vite + React 19 + TypeScript card-game suite. Ten game modes share a common
 lobby/scoring/multiplayer infrastructure: WhistAchim, Yaniv, Quartets,
 Solitaire, Shithead, Israeli Rummy (Rummikub-style), Backgammon, Checkers,
-and Woodoku (solo block puzzle). Multiplayer is built on Firebase Realtime DB;
-bots run client-side. PWA via vite-plugin-pwa.
+Woodoku (solo block puzzle), and Escape Room (solo timed puzzle stages).
+Multiplayer is built on Firebase Realtime DB; bots run client-side.
+PWA via vite-plugin-pwa.
 
 ## Layout
 
@@ -120,6 +121,10 @@ Requires `FIREBASE_SERVICE_ACCOUNT` secret in GitHub repo settings.
 GitHub: https://github.com/oferelyakim/israeli-whist
 Live: https://whist---elyakim.web.app
 
+**Version check on load** (`src/hooks/useVersionCheck.ts` + `src/components/common/UpdateBanner.tsx`): the Vite build emits `dist/version.json` (via the `emit-version-json` plugin in `vite.config.ts`) containing the current package version. On app load, `useVersionCheck` fetches `/version.json` with `cache: 'no-store'` (bypasses the service worker — `.json` is excluded from the SW glob patterns) and compares against `__APP_VERSION__` (injected at build time via `define`). A mismatch shows a green "New version available / Update" banner that calls `window.location.reload()`. **Always bump `package.json` version with every code change** — that's what triggers the banner on the user's device.
+
+**Version convention**: bump `package.json` with every code change (patch for fixes, minor for features). Current: see `package.json`.
+
 ### Run e2e
 ```bash
 npm run test:e2e            # full suite, Chromium
@@ -150,14 +155,14 @@ There's a backlog of pre-existing `no-explicit-any` errors in `src/multiplayer/*
 
 Three new games added to the registry. Key facts:
 
-- **Backgammon** (`src/games/backgammon/`): white moves index 23→0, black moves index 0→23. Bar entry = white uses `24 - pip`, black uses `pip - 1`. Bear-off target is `-1`. Dice doubles give 4 dice. AI has 3 difficulty levels (Easy=random, Medium=heuristic per-move, Hard=DFS full-turn sequence capped at 500 nodes). localStorage keys: `backgammon-saved-game` (game state), `backgammon-settings` (player prefs). Multiplayer hook follows `useYanivMultiplayer` pattern.
+- **Backgammon** (`src/games/backgammon/`): white moves index 23→0, black moves index 0→23. Bar entry = white uses `24 - pip`, black uses `pip - 1`. Bear-off target is `-1`. Dice doubles give 4 dice. AI has 3 difficulty levels (Low=DFS 400 nodes + heuristic fallback, Medium=DFS 2000 nodes + categorical move ordering, Hard=DFS 5000 nodes + 1-ply eval-based move ordering). localStorage keys: `backgammon-saved-game` (game state), `backgammon-settings` (player prefs). Multiplayer hook follows `useYanivMultiplayer` pattern.
 
 **Backgammon board initial setup (standard):**
 - idx 0 = 2 black (pt 1), idx 5 = 5 white (pt 6), idx 7 = 3 white (pt 8), idx 11 = 5 black (pt 12)
 - idx 12 = 5 white (pt 13), idx 16 = 3 black (pt 17), idx 18 = 5 black (pt 19), idx 23 = 2 white (pt 24)
 
 **Backgammon settings** (`BackgammonSettings` + `BG_DEFAULTS` in `types.ts`): `playerColor` (white|black), `homeRight` (bool), `difficulty` (1|2|3), `showMoveHints` (bool). Gear ⚙ button in `BackgammonScreen.tsx` opens a settings modal that persists to `backgammon-settings` in localStorage. Direction is implemented via `topIndices`/`bottomIndices` array reversal in `BackgammonTable.tsx`. `displayNum = pointIdx + 1` for all points (do NOT use `12 - pointIdx` or `pointIdx + 13`). **Triangle colors**: both halves use `pointIdx % 2 === 0` for `isLight` — same formula gives opposite colors on facing triangles because bottom_idx + top_idx always = 23 (different parities). Do NOT revert to `isBottom ? ===0 : ===1` which mirrors instead of alternates.
-- **Checkers** (`src/games/checkers/`): standard 8×8 American rules. Board[row][col], dark squares = (row+col)%2===1. Red moves first (seat 0 = red). Forced captures enforced via `forcedPieces`. Multi-jump via `jumpingPiece`. AI is minimax depth-5 with alpha-beta. No localStorage save (short games). Multiplayer hook follows the same pattern.
+- **Checkers** (`src/games/checkers/`): standard 8×8 American rules. Board[row][col], dark squares = (row+col)%2===1. Red moves first (seat 0 = red). Forced captures enforced via `forcedPieces`. Multi-jump via `jumpingPiece`. AI is minimax with alpha-beta; depth 2 (Easy) / 4 (Medium) / 6 (Hard). Hard uses a richer evaluation (king ×1.65, advancement bonus, back-row anchor, king centrality). `CheckersSettings.difficulty` (1|2|3), saved to `checkers-settings` localStorage. Gear ⚙ button in `CheckersScreen.tsx` opens settings modal. Multiplayer hook follows the same pattern.
 - **Woodoku** (`src/games/woodoku/`): 9×9 grid, 3 offered pieces at a time. **Currently hidden from the menu** (entry removed from `GAME_REGISTRY` in `registry.ts`) — work in progress, will be restored later. Code is intact under `src/games/woodoku/`.
 
 The pip count display in `BackgammonTable.tsx` uses `t('backgammon.pips', { n: pipCount })` — the `{n}` template must be passed.
@@ -186,8 +191,72 @@ The pip count display in `BackgammonTable.tsx` uses `t('backgammon.pips', { n: p
 - Phase detection via `isRunningGame(state)` — checks for no cross-contact and no bar checkers. Switches evaluator accordingly.
 - **Race evaluator**: pip lead ×1.0, crossover advantage ×0.5, bearing-off progress ×2.0, stacked-high-point penalty.
 - **Contact evaluator**: pip ×0.4, blot exposure (directional shot count, 1.5/attacker direct, 0.5 indirect), made-point bonuses (×2 + golden 5pt bonus +4), exponential prime scoring (5-prime→+15, 6-prime→+25), anchor values in opponent home (golden anchor=+5), opponent-blot/bar bonuses, home-board strength, opponent prime penalty.
-- **Medium (difficulty 2)**: full-turn DFS capped at 400 nodes (was per-move greedy).
-- **Hard (difficulty 3)**: full-turn DFS capped at 2000 nodes + first-move ordering (hits > making points > pip moves).
+- **Low (difficulty 1)**: full-turn DFS capped at 400 nodes + per-move heuristic fallback.
+- **Medium (difficulty 2)**: full-turn DFS capped at 2000 nodes + categorical first-move ordering (hits > point-making > pip movers).
+- **Hard (difficulty 3)**: full-turn DFS capped at 5000 nodes + 1-ply evaluation-based first-move ordering (each candidate first-move is evaluated via `evaluatePosition` before the DFS explores it, spending budget on the most promising lines first).
+
+## Escape Room (added 2026-05-18)
+
+Solo timed puzzle game at `src/games/escape-room/`. Designed as an **extractable module** — it imports only from itself + `src/i18n/` + the registry/types files, so the whole folder can be lifted into a standalone app later with minimal surgery.
+
+### Architecture
+
+- **Archetype contract** (`archetypes/types.ts`): every puzzle type implements `PuzzleArchetype<S, I>` with pure `init(params)`, `validate(state, input)`, `hint(state, idx)`, `serialize/restore`, and a React `Component`. State is always JSON-safe so round state persists through localStorage.
+- **Round runner FSM** (`engine/round-runner.ts`): pure reducer with phases `IDLE → RUNNING ⇄ STAGE_SOLVED → ROUND_COMPLETE` plus `PAUSED`/`ABANDONED`. Timer ticks (`TICK` action) only fire while `RUNNING`.
+- **Manifests** (`manifest/rounds.ts`): TS data, NOT JSON — `tsconfig.app.json` does not enable `resolveJsonModule`. `validateManifest()` runs at startup and refuses to start a round with an unknown archetype or unsupported difficulty.
+- **Seeded RNG** (`engine/seed.ts`): mulberry32. **Never call `Math.random()` inside an archetype** — all randomness must derive from `params.seed`. Retry-with-reseed in `RESTART_ROUND` calls `nextSeed(baseSeed, attemptNumber)` so the same archetype shows in the same slot but the puzzle regenerates.
+- **Save/restore**: `escape-room-saved-game` in localStorage. On rehydrate the round always lands in `PAUSED` so the player explicitly resumes (avoids stale-timer surprise).
+
+### MVP scope (current)
+
+- **Four archetypes**, all text-only and seedable: `multi-clue-padlock` (3/4/5-digit code, constraint-solved clues), `anagram` (themed word lists), `number-sequence` (find next term: arithmetic / geometric / fibonacci / quadratic / alternating), `caesar-cipher` (decode shifted word/phrase; easy reveals shift, hard hides it).
+- The round is **7 stages**, one of each archetype at easy then escalating to medium for repeats — see `manifest/rounds.ts` for the canonical curve.
+- Solo only; `EscapeRoomMultiplayerScreen.tsx` is a stub mirroring `SolitaireMultiplayerScreen`. Co-op/race can be added later via the same Firebase plumbing other games use.
+- Text-only visuals (CSS/SVG primitives). Asset-heavy archetypes deferred until the loop is proven.
+
+### Padlock invariant: every clue set must uniquely determine the code
+
+`multi-clue-padlock` is NOT a "pick N random true clues" puzzle — that was the first cut and it produced unsolvable boards (you could only narrow to 1-2 digits). The current generator (`archetype.ts`):
+
+1. Generates a random code.
+2. Builds a pool of typed `Constraint` objects that are all true for that code (sum, product, per-position parity/digit/range, all-different, all-same, contains/no digit, position-to-position comparisons, abs-diff, count-of).
+3. **Greedy uniqueness solver**: repeatedly picks the constraint that shrinks the candidate codes (all of `[0-9]^N`) the most until exactly one remains.
+4. **Redundancy pass**: tries removing each chosen clue, keeps it only if removal breaks uniqueness.
+
+The result is the **minimum sufficient** clue set — every clue is load-bearing. Clue counts in practice: 2-3 (easy/3-digit), 2-4 (medium/4-digit), 3-5 (hard/5-digit). Stage-init cost is ~60 ms even for hard puzzles (100k candidate codes) — acceptable as a one-time cost when entering a stage.
+
+**Regression test:** `scripts/test-padlock-uniqueness.mts` runs 120 trials across all 3 difficulties and brute-force-verifies the puzzle has exactly one solution. Run it any time the constraint pool or solver is touched:
+```
+./node_modules/.bin/esbuild --bundle scripts/test-padlock-uniqueness.mts --platform=node --format=esm --outfile=/tmp/test-padlock.mjs --log-level=warning && node /tmp/test-padlock.mjs
+```
+
+**Don't** revert to a random-pick-from-pool generator without first updating the regression test target — underdetermined clues are the most player-frustrating bug class in this archetype.
+
+### Adding a new game (registry + MainMenu wiring)
+
+When adding any new game (not just an archetype here), there are **four** wiring points — miss the fourth and the menu silently launches Yaniv:
+
+1. `src/types/game-common.ts` — add the `GameType` enum entry.
+2. `src/games/registry.ts` — add the `GAME_REGISTRY[...]` entry with lazy-loaded screens.
+3. `src/components/lobby/MainMenu.tsx` `GAME_I18N` — required by the strict `Record<GameType, ...>` type, build fails without it.
+4. `src/components/lobby/MainMenu.tsx` `handleSinglePlayer` — **add an explicit branch (or early return) for the new game.** The function ends with a bare `else` that dispatches Yaniv settings; any game not explicitly listed falls through and launches Yaniv. Solitaire/Woodoku/Escape Room each have their own early-return blocks at the top. If your game is solo, also add it to the `selectedGame !== SOLITAIRE && selectedGame !== WOODOKU && ...` guards that hide the multiplayer controls.
+
+### Adding a new archetype
+
+1. Create `archetypes/<id>/archetype.ts` and `Component.tsx`.
+2. Implement `PuzzleArchetype<S, I>` — all randomness must go through `mulberry32(params.seed)`.
+3. Register in `archetypes/index.ts` (`ARCHETYPES[id] = ...`).
+4. Add stages referencing the new `archetypeId` to a manifest in `manifest/rounds.ts`.
+5. Add i18n keys under `escape.archetype.<id>.*` (plus `escape.archetype.<id>.short` for the round-complete table). EN and HE both required.
+6. Add a `validateManifest` regression to the runner — the validator already checks `supportedDifficulties`.
+
+### Critical: render stage host with a key
+
+`StageHost.tsx` mounts the active archetype's `Component` with `key={`${attemptNumber}:${currentStageIndex}`}`. This forces a fresh mount on stage advance and retry, so component-local `useState` (input fields) initializes empty. **Do not replace this with a `useEffect(() => setValue(''), [state])` reset** — react-x lint flags it as "cascading renders" and the key-based approach is the idiomatic fix.
+
+### i18n composite values
+
+Archetype `hint()` and `validate()` return strings like `'escape.padlock.clue.digitAt|3|7'` — a key + pipe-separated params. The Component (not the archetype) splits and calls `t(key, { pos, digit })`. This keeps archetypes pure (no React/i18n dependency) while letting Components localize. Helper signature is `(t: TFn, raw: string) => string` where `TFn = (k: TranslationKey, p?) => string` — using `string` for `k` is a type error because `t` is strictly typed against `TranslationKey`.
 
 ## Things to NOT do
 

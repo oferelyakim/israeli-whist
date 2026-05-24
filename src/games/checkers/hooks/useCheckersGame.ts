@@ -40,7 +40,7 @@ export function useCheckersGame(settings: CheckersSettings): {
       if (current.state.phase === 'GAME_OVER') return;
       if (current.state.turn === humanColor) return;
 
-      const aiAction = getCheckersAIAction(current);
+      const aiAction = getCheckersAIAction(current, settings.difficulty ?? 2);
       if (!aiAction) return;
 
       if (aiAction.type === 'MOVE_PIECE') {
