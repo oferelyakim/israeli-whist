@@ -6,6 +6,7 @@ import { CardSetType } from '../../games/quartets/types';
 import { RummyVariant } from '../../games/rummy/types';
 import { useTranslation } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
+import { isFirebaseConfigured } from '../../multiplayer/firebase-config';
 import './MainMenu.css';
 
 // Map game types to their translation keys
@@ -95,11 +96,11 @@ function loadStoredPlayerName(): string {
   return 'You';
 }
 
-// Lazy check: only import firebase when actually needed
+// Uses isFirebaseConfigured() from firebase-config which falls back to
+// hardcoded PROD_CONFIG values, so multiplayer is always enabled in production.
 function checkFirebaseConfigured(): boolean {
   try {
-    const env = import.meta.env;
-    return !!(env.VITE_FIREBASE_API_KEY && env.VITE_FIREBASE_DATABASE_URL && env.VITE_FIREBASE_PROJECT_ID);
+    return isFirebaseConfigured();
   } catch {
     return false;
   }
