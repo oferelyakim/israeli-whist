@@ -123,6 +123,8 @@ Live: https://whist---elyakim.web.app
 
 **Firebase config** (`src/multiplayer/firebase-config.ts`): the production Firebase credentials are hardcoded as `PROD_CONFIG` fallbacks in `getFirebaseConfig()`. `.env` env-vars override them for local dev but are NOT required for the build — the deployed app always has a working config. Firebase client config is intentionally public; security is enforced by Realtime Database rules (`auth != null`), not by hiding these values.
 
+**Multiplayer gate in MainMenu** (`src/components/lobby/MainMenu.tsx`): `checkFirebaseConfigured()` delegates to `isFirebaseConfigured()` from `firebase-config.ts` — do NOT revert it to a raw `import.meta.env` check. A raw env check misses the `PROD_CONFIG` fallbacks and hides the Create Room / Join Room buttons in every deployed build (the bug that existed before v1.1.4).
+
 **Version check on load** (`src/hooks/useVersionCheck.ts` + `src/components/common/UpdateBanner.tsx`): the Vite build emits `dist/version.json` (via the `emit-version-json` plugin in `vite.config.ts`) containing the current package version. On app load, `useVersionCheck` fetches `/version.json` with `cache: 'no-store'` (bypasses the service worker — `.json` is excluded from the SW glob patterns) and compares against `__APP_VERSION__` (injected at build time via `define`). A mismatch shows a green "New version available / Update" banner that calls `window.location.reload()`. **Always bump `package.json` version with every code change** — that's what triggers the banner on the user's device.
 
 **Version convention**: bump `package.json` with every code change (patch for fixes, minor for features). Current: see `package.json`.
