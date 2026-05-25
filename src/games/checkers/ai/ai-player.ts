@@ -9,31 +9,78 @@ import {
   countPieces,
 } from '../engine/board';
 
-const DEPTH_BY_DIFFICULTY: Record<1 | 2 | 3, number> = { 1: 2, 2: 4, 3: 6 };
+// Hard uses depth 7 + quiescence search; Easy/Medium use shallower depth, simpler eval
+const DEPTH_BY_DIFFICULTY: Record<1 | 2 | 3, number> = { 1: 2, 2: 4, 3: 7 };
 
-// Standard evaluation used at Easy/Medium depth
+// At leaf nodes for Hard, extend the search up to this many extra plies
+// but only for capture moves — prevents the horizon effect mid-exchange.
+const QUIESCENCE_DEPTH = 4;
+
+// ---------------------------------------------------------------------------
+// Easy / Medium evaluation (piece count + basic center bonus)
+// ---------------------------------------------------------------------------
+
 function evaluate(board: Board): number {
   const { red, redKings, black, blackKings } = countPieces(board);
   let score = (red * 1.0 + redKings * 1.5) - (black * 1.0 + blackKings * 1.5);
 
-  // Center bonus: rows 3-4, cols 2-5
   for (let row = 3; row <= 4; row++) {
     for (let col = 2; col <= 5; col++) {
       const cell = board[row][col];
-      if (cell) {
-        score += cell.color === 'red' ? 0.1 : -0.1;
-      }
+      if (cell) score += cell.color === 'red' ? 0.1 : -0.1;
     }
   }
-
   return score;
 }
 
-// Richer evaluation used at Hard depth (kings worth more, positional bonuses)
+// ---------------------------------------------------------------------------
+// Hard evaluation helpers
+// ---------------------------------------------------------------------------
+
+/** Count pieces of `color` that can be immediately captured by the opponent. */
+function countHanging(board: Board, color: PieceColor): number {
+  const opp: PieceColor = color === 'red' ? 'black' : 'red';
+  const threatened = new Set<string>();
+  for (const [fromRow, fromCol] of getAllForcedPieces(board, opp)) {
+    for (const [toRow, toCol] of getCaptureMoves(board, fromRow, fromCol)) {
+      // The captured piece sits between from and to
+      const midRow = (fromRow + toRow) / 2;
+      const midCol = (fromCol + toCol) / 2;
+      threatened.add(`${midRow},${midCol}`);
+    }
+  }
+  return threatened.size;
+}
+
+/** Number of legal moves available to `color`. Used for mobility comparison. */
+function mobilityCount(board: Board, color: PieceColor): number {
+  const forced = getAllForcedPieces(board, color);
+  if (forced.length > 0) {
+    let count = 0;
+    for (const [r, c] of forced) count += getCaptureMoves(board, r, c).length;
+    return count;
+  }
+  let count = 0;
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const p = board[r][c];
+      if (p && p.color === color) count += getRegularMoves(board, r, c).length;
+    }
+  }
+  return count;
+}
+
+// ---------------------------------------------------------------------------
+// Hard evaluation (richer positional + tactical terms)
+// ---------------------------------------------------------------------------
+
 function evaluateHard(board: Board): number {
   const { red, redKings, black, blackKings } = countPieces(board);
-  let score = (red * 1.0 + redKings * 1.65) - (black * 1.0 + blackKings * 1.65);
 
+  // 1. Material — kings worth 1.8× (4 move directions vs 2 for regular pieces)
+  let score = (red * 1.0 + redKings * 1.8) - (black * 1.0 + blackKings * 1.8);
+
+  // 2. Positional features per piece
   for (let row = 0; row < 8; row++) {
     for (let col = 0; col < 8; col++) {
       const piece = board[row][col];
@@ -41,27 +88,51 @@ function evaluateHard(board: Board): number {
       const sign = piece.color === 'red' ? 1 : -1;
 
       if (!piece.king) {
-        // Advancement: closer to promotion row = more valuable
-        const advance = piece.color === 'red' ? (7 - row) : row;
-        score += sign * advance * 0.04;
-        // Back-row anchor: last piece in back row prevents easy promotions
-        const isBack = piece.color === 'red' ? row === 7 : row === 0;
-        if (isBack) score += sign * 0.25;
+        // Tempo — pieces close to promotion are much more valuable.
+        // Red promotes at row 0; black promotes at row 7.
+        const rowsToKing = piece.color === 'red' ? row : 7 - row;
+        if (rowsToKing === 1) score += sign * 0.7;  // one move from becoming king
+        else if (rowsToKing === 2) score += sign * 0.2;
+
+        // Back-row anchor — keeping a piece in its own back row prevents the
+        // opponent from freely promoting through that row.
+        const isOwnBack = piece.color === 'red' ? row === 7 : row === 0;
+        if (isOwnBack) score += sign * 0.35;
       } else {
-        // King centrality: central kings control more squares
+        // King centrality — central kings cover 4 diagonals; corner kings cover 2.
         const centerDist = Math.abs(row - 3.5) + Math.abs(col - 3.5);
-        score += sign * (7 - centerDist) * 0.04;
+        score += sign * (7 - centerDist) * 0.07;
       }
 
-      // Broad center bonus for all pieces
-      if (row >= 2 && row <= 5 && col >= 2 && col <= 5) {
-        score += sign * 0.12;
+      // Center control — pieces in the center rows/cols constrain opponent movement.
+      if (row >= 3 && row <= 4 && col >= 2 && col <= 5) {
+        score += sign * 0.2;   // core 4 center squares
+      } else if (row >= 2 && row <= 5 && col >= 1 && col <= 6) {
+        score += sign * 0.07;  // extended center
       }
     }
   }
 
+  // 3. Mobility — more legal moves = more control and flexibility.
+  const redMobility  = mobilityCount(board, 'red');
+  const blackMobility = mobilityCount(board, 'black');
+  score += (redMobility - blackMobility) * 0.1;
+
+  // 4. Piece safety — penalize immediately capturable (hanging) pieces.
+  //    The search handles tactical exchanges, but this nudges the AI away
+  //    from leaving pieces en prise at positions the depth doesn't reach.
+  const redHanging   = countHanging(board, 'red');
+  const blackHanging = countHanging(board, 'black');
+  score += (blackHanging - redHanging) * 0.4;
+
   return score;
 }
+
+// ---------------------------------------------------------------------------
+// Quiescence search — extends leaf nodes when captures are available.
+// This prevents the horizon effect: the AI won't stop evaluation mid-exchange
+// and falsely think it's ahead because it can't see the reply capture.
+// ---------------------------------------------------------------------------
 
 interface Move {
   fromRow: number;
@@ -69,6 +140,80 @@ interface Move {
   toRow: number;
   toCol: number;
 }
+
+function applyMoveForAI(
+  board: Board,
+  move: Move
+): { board: Board; continueFrom: [number, number] | null } {
+  const { board: newBoard, captured } = applyMove(
+    board, move.fromRow, move.fromCol, move.toRow, move.toCol
+  );
+  const continueFrom: [number, number] | null =
+    captured && getCaptureMoves(newBoard, move.toRow, move.toCol).length > 0
+      ? [move.toRow, move.toCol]
+      : null;
+  return { board: newBoard, continueFrom };
+}
+
+function opponent(color: PieceColor): PieceColor {
+  return color === 'red' ? 'black' : 'red';
+}
+
+function quiescence(
+  board: Board,
+  turn: PieceColor,
+  alpha: number,
+  beta: number,
+  isMaximizing: boolean,
+  depth: number
+): number {
+  // Stand-pat score: what we get if we stop searching now.
+  const standPat = evaluateHard(board);
+
+  if (isMaximizing) {
+    if (standPat >= beta) return standPat;  // fail-hard beta cutoff
+    if (standPat > alpha) alpha = standPat;
+  } else {
+    if (standPat <= alpha) return standPat; // fail-hard alpha cutoff
+    if (standPat < beta) beta = standPat;
+  }
+
+  if (depth === 0) return standPat;
+
+  // Only expand forced capture moves — stop at quiet positions.
+  const forced = getAllForcedPieces(board, turn);
+  if (forced.length === 0) return standPat;
+
+  const captureMoves: Move[] = [];
+  for (const [row, col] of forced) {
+    for (const [toRow, toCol] of getCaptureMoves(board, row, col)) {
+      captureMoves.push({ fromRow: row, fromCol: col, toRow, toCol });
+    }
+  }
+
+  let best = standPat;
+  for (const move of captureMoves) {
+    const { board: nextBoard, continueFrom } = applyMoveForAI(board, move);
+    const value = continueFrom !== null
+      // Multi-jump: same player continues
+      ? quiescence(nextBoard, turn, alpha, beta, isMaximizing, depth - 1)
+      : quiescence(nextBoard, opponent(turn), alpha, beta, !isMaximizing, depth - 1);
+
+    if (isMaximizing) {
+      if (value > best) best = value;
+      if (best > alpha) alpha = best;
+    } else {
+      if (value < best) best = value;
+      if (best < beta) beta = best;
+    }
+    if (beta <= alpha) break;
+  }
+  return best;
+}
+
+// ---------------------------------------------------------------------------
+// Move generation
+// ---------------------------------------------------------------------------
 
 function generateMoves(board: Board, turn: PieceColor): Move[] {
   const forced = getAllForcedPieces(board, turn);
@@ -92,36 +237,13 @@ function generateMoves(board: Board, turn: PieceColor): Move[] {
       }
     }
   }
-
   return moves;
 }
 
-function opponent(color: PieceColor): PieceColor {
-  return color === 'red' ? 'black' : 'red';
-}
+// ---------------------------------------------------------------------------
+// Minimax with alpha-beta pruning
+// ---------------------------------------------------------------------------
 
-// Apply a single move and return new board + whether a multi-jump continues from (toRow, toCol)
-function applyMoveForAI(
-  board: Board,
-  move: Move
-): { board: Board; continueFrom: [number, number] | null } {
-  const { board: newBoard, captured } = applyMove(
-    board,
-    move.fromRow,
-    move.fromCol,
-    move.toRow,
-    move.toCol
-  );
-  const continueFrom: [number, number] | null =
-    captured && getCaptureMoves(newBoard, move.toRow, move.toCol).length > 0
-      ? [move.toRow, move.toCol]
-      : null;
-
-  return { board: newBoard, continueFrom };
-}
-
-// Minimax: maximizing = black's perspective (AI is black by default, but evaluation is symmetric)
-// The caller decides which side to maximize based on the turn.
 function minimax(
   board: Board,
   turn: PieceColor,
@@ -131,11 +253,14 @@ function minimax(
   isMaximizing: boolean,
   useHardEval: boolean
 ): number {
-  if (depth === 0) return useHardEval ? evaluateHard(board) : evaluate(board);
+  if (depth === 0) {
+    // Hard: run quiescence search to resolve any pending captures before evaluating
+    if (useHardEval) return quiescence(board, turn, alpha, beta, isMaximizing, QUIESCENCE_DEPTH);
+    return evaluate(board);
+  }
 
   const moves = generateMoves(board, turn);
   if (moves.length === 0) {
-    // Current player has no moves — they lose
     return isMaximizing ? -Infinity : Infinity;
   }
 
@@ -143,7 +268,6 @@ function minimax(
     let best = -Infinity;
     for (const move of moves) {
       const { board: nextBoard, continueFrom } = applyMoveForAI(board, move);
-
       let value: number;
       if (continueFrom !== null) {
         value = minimax(nextBoard, turn, depth - 1, alpha, beta, isMaximizing, useHardEval);
@@ -154,7 +278,6 @@ function minimax(
           value = minimax(nextBoard, opponent(turn), depth - 1, alpha, beta, false, useHardEval);
         }
       }
-
       best = Math.max(best, value);
       alpha = Math.max(alpha, best);
       if (beta <= alpha) break;
@@ -164,7 +287,6 @@ function minimax(
     let best = Infinity;
     for (const move of moves) {
       const { board: nextBoard, continueFrom } = applyMoveForAI(board, move);
-
       let value: number;
       if (continueFrom !== null) {
         value = minimax(nextBoard, turn, depth - 1, alpha, beta, isMaximizing, useHardEval);
@@ -175,7 +297,6 @@ function minimax(
           value = minimax(nextBoard, opponent(turn), depth - 1, alpha, beta, true, useHardEval);
         }
       }
-
       best = Math.min(best, value);
       beta = Math.min(beta, best);
       if (beta <= alpha) break;
@@ -183,6 +304,10 @@ function minimax(
     return best;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Public entry point
+// ---------------------------------------------------------------------------
 
 export function getCheckersAIAction(
   state: CheckersGameState,

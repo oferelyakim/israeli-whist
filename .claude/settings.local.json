@@ -28,7 +28,13 @@
       "Bash(firebase login:ci)",
       "Bash(git add *)",
       "Bash(git commit -m 'chore\\(ci\\): add GitHub Actions deploy workflow to Firebase Hosting *)",
-      "Bash(git commit -m 'docs\\(ci\\): update CLAUDE.md with GitHub repo + auto-deploy workflow *)"
+      "Bash(git commit -m 'docs\\(ci\\): update CLAUDE.md with GitHub repo + auto-deploy workflow *)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:gamedev.net)",
+      "WebFetch(domain:www.academia.edu)",
+      "WebFetch(domain:playbrain.games)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(git status *)"
     ]
   }
 }
