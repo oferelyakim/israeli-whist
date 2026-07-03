@@ -238,6 +238,10 @@ export function backgammonReducer(
   action: BackgammonAction
 ): BackgammonGameState {
   switch (action.type) {
+    case 'DEAL':
+      // No-op: the initial board/turn are fixed & deterministic (see createInitialBoard).
+      // Published at seq 1 by publishStartGame so replay starts from a known point.
+      return state;
     case 'ROLL_DICE':
       return applyRollDice(state, action.seed);
     case 'MOVE_CHECKER':

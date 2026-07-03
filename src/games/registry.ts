@@ -169,20 +169,23 @@ export const GAME_REGISTRY: Partial<Record<GameType, GameConfig>> = {
   },
   // Woodoku hidden from menu — work in progress, will be re-added later
   // [GameType.WOODOKU]: { ... }
-  [GameType.ESCAPE_ROOM]: {
-    type: GameType.ESCAPE_ROOM,
-    displayName: 'registry.escapeRoom.name',
-    minPlayers: 1,
-    maxPlayers: 1,
-    defaultPlayers: 1,
-    description: 'registry.escapeRoom.description',
-    rulesSnippet: [
-      'registry.escapeRoom.rule1',
-      'registry.escapeRoom.rule2',
-      'registry.escapeRoom.rule3',
-      'registry.escapeRoom.rule4',
-    ],
-    GameScreen: lazy(() => import('./escape-room/components/EscapeRoomGameScreen')),
-    MultiplayerScreen: lazy(() => import('./escape-room/components/EscapeRoomMultiplayerScreen')),
-  },
+  // Escape Room hidden from menu — work in progress, will be re-added later.
+  // Enum (game-common.ts) + GAME_I18N entry are kept so tsc stays green;
+  // re-add this block to restore it. Code lives in src/games/escape-room/.
+  // [GameType.ESCAPE_ROOM]: {
+  //   type: GameType.ESCAPE_ROOM,
+  //   displayName: 'registry.escapeRoom.name',
+  //   minPlayers: 1,
+  //   maxPlayers: 1,
+  //   defaultPlayers: 1,
+  //   description: 'registry.escapeRoom.description',
+  //   rulesSnippet: [
+  //     'registry.escapeRoom.rule1',
+  //     'registry.escapeRoom.rule2',
+  //     'registry.escapeRoom.rule3',
+  //     'registry.escapeRoom.rule4',
+  //   ],
+  //   GameScreen: lazy(() => import('./escape-room/components/EscapeRoomGameScreen')),
+  //   MultiplayerScreen: lazy(() => import('./escape-room/components/EscapeRoomMultiplayerScreen')),
+  // },
 };

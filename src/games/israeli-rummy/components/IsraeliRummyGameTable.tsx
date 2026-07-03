@@ -977,15 +977,17 @@ export function IsraeliRummyGameTable({
             if (jokerIdx !== null) {
               // Insert real card, pop joker out, push joker to the new-set
               // builder (user will place it elsewhere before committing).
+              // Swap the real card into the joker's exact slot — this keeps
+              // the visible tile order stable (only that one cell changes),
+              // no live re-sort. Validate against a sorted copy (positional).
               const replaced = targetMeld.cards.slice();
               const freedJoker = replaced[jokerIdx];
               replaced[jokerIdx] = drag.cards[0];
-              const sortedReplaced = sortMeldCards(replaced);
-              const { type } = isValidMeld(sortedReplaced);
+              const { type } = isValidMeld(sortMeldCards(replaced));
               hand = hand.filter((_, i) => !indicesToRemove.has(i));
               melds = melds.map(m =>
                 m.id === nearestMeld
-                  ? { ...m, cards: sortedReplaced, type: type ?? m.type }
+                  ? { ...m, cards: replaced, type: type ?? m.type }
                   : m,
               );
               builder = [...builder, freedJoker];
@@ -1002,8 +1004,10 @@ export function IsraeliRummyGameTable({
             hand = hand.filter((_, i) => !indicesToRemove.has(i));
             melds = melds.map(m => {
               if (m.id !== nearestMeld) return m;
-              const newCards = sortMeldCards([...m.cards, ...drag.cards]);
-              const { type } = isValidMeld(newCards);
+              // Append at the drop end — do NOT re-sort the meld so the
+              // existing tiles stay put. Validity is checked on a sorted copy.
+              const newCards = [...m.cards, ...drag.cards];
+              const { type } = isValidMeld(sortMeldCards(newCards));
               return { ...m, cards: newCards, type: type ?? m.type };
             });
             setIsRearranging(true);
@@ -1018,8 +1022,9 @@ export function IsraeliRummyGameTable({
           hand = hand.filter((_, i) => !indicesToRemove.has(i));
           const newMeld: Meld = {
             id: `new_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-            cards: sortMeldCards(drag.cards),
-            type: isValidMeld(drag.cards).type ?? 'set',
+            // Keep drop order; the meld is sorted/validated at commit.
+            cards: [...drag.cards],
+            type: isValidMeld(sortMeldCards(drag.cards)).type ?? 'set',
           };
           melds = [...melds, newMeld];
           setIsRearranging(true);
@@ -1040,10 +1045,14 @@ export function IsraeliRummyGameTable({
           // the builder is now the general-purpose "new meld in progress"
           // zone, not a joker-only workbench.
           ensureRearranging();
+          // Do NOT filter emptied melds out mid-rearrange — removing an entry
+          // reflows/reindexes every later meld ("the board jumps"). Emptied
+          // melds are kept in place (renderMeldGroup renders nothing for them)
+          // and dropped at commit.
           melds = melds.map(m => {
             if (m.id !== drag.meldId) return m;
             return { ...m, cards: m.cards.filter((_, i) => i !== drag.meldCardIdx) };
-          }).filter(m => m.cards.length > 0);
+          });
           builder = [...builder, ...drag.cards];
           setIsRearranging(true);
           setWorkingMelds(melds);
@@ -1057,12 +1066,13 @@ export function IsraeliRummyGameTable({
               return { ...m, cards: m.cards.filter((_, i) => i !== drag.meldCardIdx) };
             }
             if (m.id === nearestMeld) {
-              const newCards = sortMeldCards([...m.cards, ...drag.cards]);
-              const { type } = isValidMeld(newCards);
+              // Append at the drop end — no live re-sort. Validate a copy.
+              const newCards = [...m.cards, ...drag.cards];
+              const { type } = isValidMeld(sortMeldCards(newCards));
               return { ...m, cards: newCards, type: type ?? m.type };
             }
             return m;
-          }).filter(m => m.cards.length > 0);
+          });
           setIsRearranging(true);
           setWorkingMelds(melds);
           setWorkingHand(hand);
@@ -1072,7 +1082,7 @@ export function IsraeliRummyGameTable({
           melds = melds.map(m => {
             if (m.id !== drag.meldId) return m;
             return { ...m, cards: m.cards.filter((_, i) => i !== drag.meldCardIdx) };
-          }).filter(m => m.cards.length > 0);
+          });
           const newMeld: Meld = {
             id: `new_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
             cards: drag.cards,
@@ -1119,8 +1129,9 @@ export function IsraeliRummyGameTable({
         } else if (nearestMeld) {
           melds = melds.map(m => {
             if (m.id !== nearestMeld) return m;
-            const newCards = sortMeldCards([...m.cards, tile]);
-            const { type } = isValidMeld(newCards);
+            // Append at the drop end — no live re-sort. Validate a copy.
+            const newCards = [...m.cards, tile];
+            const { type } = isValidMeld(sortMeldCards(newCards));
             return { ...m, cards: newCards, type: type ?? m.type };
           });
           setWorkingMelds(melds);
@@ -1187,7 +1198,17 @@ export function IsraeliRummyGameTable({
     // (cards[i] must equal base + i) but the builder array is in the order
     // tiles were dropped. Sorting via sortMeldCards arranges them
     // positionally so [11, 13, joker] becomes [11, joker, 13] and validates.
-    let meldsToCommit = workingMelds;
+    // During rearrange, workingMelds keep tiles in the user's drop order (for
+    // stable, churn-free display) and may include melds emptied mid-rearrange.
+    // Commit is where we canonicalize: drop empty melds and sort each meld
+    // positionally so runs validate (isValidMeld for runs is positional).
+    let meldsToCommit = workingMelds
+      .filter(m => m.cards.length > 0)
+      .map(m => {
+        const sorted = sortMeldCards(m.cards);
+        const { type } = isValidMeld(sorted);
+        return { ...m, cards: sorted, type: type ?? m.type };
+      });
     if (newMeldBuilder.length > 0) {
       const sortedBuilder = sortMeldCards(newMeldBuilder);
       const builderCheck = isValidMeld(sortedBuilder);
@@ -1200,7 +1221,7 @@ export function IsraeliRummyGameTable({
         cards: sortedBuilder,
         type: builderCheck.type ?? 'set',
       };
-      meldsToCommit = [...workingMelds, builderMeld];
+      meldsToCommit = [...meldsToCommit, builderMeld];
     }
 
     for (const meld of meldsToCommit) {
@@ -1425,12 +1446,24 @@ export function IsraeliRummyGameTable({
   // ─── Render: Melds ────────────────────────────────────────────────────────
 
   const renderMeldGroup = (meld: Meld) => {
-    const meldValid = isValidMeld(meld.cards).valid;
+    // A meld emptied mid-rearrange (its last tile dragged out) is KEPT in
+    // workingMelds so the surrounding melds don't reindex/jump — we simply
+    // render nothing for it (a "removed slot"). It's filtered out at commit.
+    if (meld.cards.length === 0) return null;
+    // Tiles render in the user's DROP order (meld.cards as-is), never
+    // re-sorted live — dropping a tile must not reshuffle the whole meld.
+    // Runs validate positionally, so validity is checked on a sorted COPY
+    // without changing what we display or store.
+    const meldValid = isValidMeld(sortMeldCards(meld.cards)).valid;
     const isDropTarget = dropTargetMeldId === meld.id;
-    const sortedCards = sortMeldCards(meld.cards);
     const meldTypeClass = meldValid
       ? (meld.type === 'run' ? 'irummy-meld-type-run' : 'irummy-meld-type-set')
       : '';
+    // Occurrence-aware keys: the double deck means two tiles can share a
+    // cardKey within one meld. Combine meld id + cardKey + per-key occurrence
+    // so keys are unique AND stable across add/remove (a tile keeps its DOM
+    // identity regardless of position).
+    const occ = new Map<string, number>();
     return (
       <div
         key={meld.id}
@@ -1442,12 +1475,14 @@ export function IsraeliRummyGameTable({
           !meldValid ? 'irummy-meld-invalid' : '',
         ].join(' ')}
       >
-        {sortedCards.map((card, sortedIdx) => {
-          const origIdx = meld.cards.indexOf(card);
+        {meld.cards.map((card, origIdx) => {
           const isDragSource = dragSourceMeld?.meldId === meld.id && dragSourceMeld?.cardIdx === origIdx;
+          const base = cardKey(card);
+          const n = occ.get(base) ?? 0;
+          occ.set(base, n + 1);
           return (
             <div
-              key={`${cardKey(card)}_${sortedIdx}`}
+              key={`${meld.id}__${base}#${n}`}
               className={[
                 'irummy-meld-card',
                 canInteract ? 'irummy-meld-card-draggable' : '',
@@ -1651,7 +1686,9 @@ export function IsraeliRummyGameTable({
         if (left > 0) { snapshotCounts.set(k, left - 1); return false; }
         return true;
       });
-      if (newInMeld && isValidMeld(meld.cards).valid) {
+      // workingMelds hold tiles in drop order during rearrange — validate a
+      // sorted copy (runs are positional). Point value is order-independent.
+      if (newInMeld && isValidMeld(sortMeldCards(meld.cards)).valid) {
         total += meldPointValue(meld.cards);
       }
     }

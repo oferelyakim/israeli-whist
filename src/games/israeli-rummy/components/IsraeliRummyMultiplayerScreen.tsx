@@ -1,5 +1,9 @@
 import { useCallback } from 'react';
+import { IsraeliRummyGameTable } from './IsraeliRummyGameTable';
+import { useIsraeliRummyMultiplayer } from '../hooks/useIsraeliRummyMultiplayer';
+import { IsraeliRummyPhase } from '../types';
 import type { MultiplayerScreenProps } from '../../registry';
+import { useTranslation } from '../../../i18n/LanguageContext';
 
 const exitBtnStyle: React.CSSProperties = {
   position: 'fixed', top: 10, left: 10, zIndex: 999,
@@ -9,43 +13,81 @@ const exitBtnStyle: React.CSSProperties = {
 };
 
 export default function IsraeliRummyMultiplayerScreen({
-  roomId: _roomId,
-  humanSeat: _humanSeat,
-  isHost: _isHost,
+  roomId,
+  humanSeat,
+  isHost,
   onBack,
 }: MultiplayerScreenProps) {
+  const { t } = useTranslation();
+  const {
+    gameState,
+    syncError,
+    retrySync,
+    drawCard,
+    startRearrange,
+    commitMelds,
+    revertRearrange,
+    passTurn,
+    sortHand,
+    reorderHand,
+    newGame,
+    endGame,
+    humanSeat: seat,
+  } = useIsraeliRummyMultiplayer(roomId, humanSeat, isHost);
+
   const handleExit = useCallback(() => {
-    onBack();
-  }, [onBack]);
+    if (window.confirm(t('common.exitConfirm'))) {
+      onBack();
+    }
+  }, [t, onBack]);
+
+  if (!gameState || gameState.phase === IsraeliRummyPhase.DEALING) {
+    return (
+      <div style={{ color: '#aaa', textAlign: 'center', paddingTop: '40vh' }}>
+        {t('common.loadingGame')}
+      </div>
+    );
+  }
 
   return (
-    <div style={{
-      width: '100%',
-      height: '100vh',
-      background: 'linear-gradient(135deg, #1a4a2e 0%, #0d2818 100%)',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: '#fff',
-      fontFamily: 'var(--font-main, "Segoe UI", sans-serif)',
-    }}>
+    <>
+      {syncError && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
+          background: '#b71c1c', color: '#fff', padding: '8px 16px',
+          textAlign: 'center', fontSize: '14px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
+        }}>
+          <span>{syncError}</span>
+          <button
+            onClick={retrySync}
+            style={{
+              background: '#fff', color: '#b71c1c', border: 'none',
+              borderRadius: '4px', padding: '4px 12px', cursor: 'pointer',
+              fontWeight: 'bold', fontSize: '13px',
+            }}
+          >
+            {t('common.reload')}
+          </button>
+        </div>
+      )}
       <button style={exitBtnStyle} onClick={handleExit}>
-        &times; Back
+        ✕ {t('common.exitGame')}
       </button>
-      <div style={{
-        background: 'rgba(0,0,0,0.4)',
-        borderRadius: '16px',
-        padding: '32px 48px',
-        textAlign: 'center',
-      }}>
-        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚧</div>
-        <h2 style={{ margin: '0 0 12px', fontSize: '24px' }}>Multiplayer Coming Soon</h2>
-        <p style={{ margin: 0, color: '#aaa', fontSize: '14px' }}>
-          Israeli Rummy multiplayer is not yet available.<br />
-          Play against AI in single-player mode!
-        </p>
-      </div>
-    </div>
+      <IsraeliRummyGameTable
+        gameState={gameState}
+        humanSeat={seat}
+        onDrawCard={drawCard}
+        onStartRearrange={startRearrange}
+        onCommitMelds={commitMelds}
+        onRevertRearrange={revertRearrange}
+        onPassTurn={passTurn}
+        onSortHand={sortHand}
+        onReorderHand={reorderHand}
+        onNewGame={newGame}
+        onEndGame={endGame}
+        onBack={onBack}
+      />
+    </>
   );
 }

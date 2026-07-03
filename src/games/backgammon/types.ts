@@ -58,6 +58,10 @@ export interface BgMove {
 }
 
 export type BackgammonAction =
+  // DEAL is published at seq 1 by the multiplayer start flow (publishStartGame).
+  // Backgammon's initial board/turn are fixed & deterministic, so it is an
+  // intentional no-op — kept in the union so the reducer handles it explicitly.
+  | { type: 'DEAL'; seed: number }
   | { type: 'ROLL_DICE'; seed: number }
   | { type: 'MOVE_CHECKER'; from: number | 'bar'; to: number }
   | { type: 'COMBINED_MOVE'; from: number | 'bar'; via: number; to: number }
