@@ -507,18 +507,24 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--meld-gap, 8px);
-  justify-content: center;
+  /* ALWAYS anchor to the start — never center. With justify-content: center,
+   * the grid re-centers every meld whenever ANY meld changes width, and it
+   * ALSO snapped from centered→flex-start the instant a drag began (the
+   * class below used to toggle it) — that was the "the whole table rearranges
+   * as soon as I touch/drag a tile" complaint. A constant flex-start keeps
+   * every leading meld fixed in place; only a meld that itself grows (and the
+   * melds after it on the same row) can shift. */
+  justify-content: flex-start;
   align-content: flex-start;
   /* Individual meld frames must not stretch — they need to stay compact so
    * multiple fit per row. flex-wrap with no grow gives "as many as fit,
    * wrap rest". */
 }
 
-/* During rearrange/drag, anchor rows to the start instead of center. With
- * justify-content: center, a single meld growing wider re-centers every
- * other meld on its row — the "whole board moves when I drop a tile"
- * complaint. flex-start keeps the leading melds where they were and only
- * the trailing ones near the row edge shift. */
+/* Retained (now redundant with the constant flex-start above) so the
+ * `irummy-melds-stable-rows` class toggled from JS remains a valid, no-op
+ * selector rather than an undefined class. Do not re-add justify-content:
+ * center to the base rule — the drag-start snap must never come back. */
 .irummy-melds-stable-rows .irummy-melds-grid {
   justify-content: flex-start;
 }

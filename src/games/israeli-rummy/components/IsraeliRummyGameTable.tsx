@@ -1004,10 +1004,14 @@ export function IsraeliRummyGameTable({
             hand = hand.filter((_, i) => !indicesToRemove.has(i));
             melds = melds.map(m => {
               if (m.id !== nearestMeld) return m;
-              // Append at the drop end — do NOT re-sort the meld so the
-              // existing tiles stay put. Validity is checked on a sorted copy.
-              const newCards = [...m.cards, ...drag.cards];
-              const { type } = isValidMeld(sortMeldCards(newCards));
+              // Slot the dropped tile into its correct position WITHIN this
+              // meld (sorted), so a 6 dropped on [7,8,9] shows as [6,7,8,9]
+              // immediately — "attaching a brick" is the movement the player
+              // wants to see. Only THIS meld reorders; other melds never move
+              // (grid is flex-start). Sorting here also keeps the stored order
+              // == display order for stable occurrence-based React keys.
+              const newCards = sortMeldCards([...m.cards, ...drag.cards]);
+              const { type } = isValidMeld(newCards);
               return { ...m, cards: newCards, type: type ?? m.type };
             });
             setIsRearranging(true);
@@ -1020,11 +1024,14 @@ export function IsraeliRummyGameTable({
           ensureRearranging();
           const indicesToRemove = new Set(drag.handIndices);
           hand = hand.filter((_, i) => !indicesToRemove.has(i));
+          const sortedNew = sortMeldCards(drag.cards);
           const newMeld: Meld = {
             id: `new_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-            // Keep drop order; the meld is sorted/validated at commit.
-            cards: [...drag.cards],
-            type: isValidMeld(sortMeldCards(drag.cards)).type ?? 'set',
+            // Store sorted so a run reads in order right away (e.g. a joker
+            // dropped between 11 and 13 shows as [10,11,joker,13], not appended
+            // at the end and only fixed on submit).
+            cards: sortedNew,
+            type: isValidMeld(sortedNew).type ?? 'set',
           };
           melds = [...melds, newMeld];
           setIsRearranging(true);
@@ -1066,9 +1073,11 @@ export function IsraeliRummyGameTable({
               return { ...m, cards: m.cards.filter((_, i) => i !== drag.meldCardIdx) };
             }
             if (m.id === nearestMeld) {
-              // Append at the drop end — no live re-sort. Validate a copy.
-              const newCards = [...m.cards, ...drag.cards];
-              const { type } = isValidMeld(sortMeldCards(newCards));
+              // Slot the moved tile into its sorted position in the target
+              // meld (only this meld reorders; the source meld just loses the
+              // tile in place). Stored order == display order for stable keys.
+              const newCards = sortMeldCards([...m.cards, ...drag.cards]);
+              const { type } = isValidMeld(newCards);
               return { ...m, cards: newCards, type: type ?? m.type };
             }
             return m;
@@ -1085,7 +1094,7 @@ export function IsraeliRummyGameTable({
           });
           const newMeld: Meld = {
             id: `new_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-            cards: drag.cards,
+            cards: sortMeldCards(drag.cards),
             type: 'set',
           };
           melds = [...melds, newMeld];
@@ -1129,9 +1138,9 @@ export function IsraeliRummyGameTable({
         } else if (nearestMeld) {
           melds = melds.map(m => {
             if (m.id !== nearestMeld) return m;
-            // Append at the drop end — no live re-sort. Validate a copy.
-            const newCards = [...m.cards, tile];
-            const { type } = isValidMeld(sortMeldCards(newCards));
+            // Slot the builder tile into its sorted position in the target meld.
+            const newCards = sortMeldCards([...m.cards, tile]);
+            const { type } = isValidMeld(newCards);
             return { ...m, cards: newCards, type: type ?? m.type };
           });
           setWorkingMelds(melds);
@@ -1450,11 +1459,11 @@ export function IsraeliRummyGameTable({
     // workingMelds so the surrounding melds don't reindex/jump — we simply
     // render nothing for it (a "removed slot"). It's filtered out at commit.
     if (meld.cards.length === 0) return null;
-    // Tiles render in the user's DROP order (meld.cards as-is), never
-    // re-sorted live — dropping a tile must not reshuffle the whole meld.
-    // Runs validate positionally, so validity is checked on a sorted COPY
-    // without changing what we display or store.
-    const meldValid = isValidMeld(sortMeldCards(meld.cards)).valid;
+    // meld.cards is stored already-sorted by the drop handlers, so rendering
+    // it as-is shows a tidy in-order meld (a dropped tile slots into place).
+    // Only the meld that received/lost a tile changes; sibling melds never
+    // move (grid is flex-start). Validity is positional for runs.
+    const meldValid = isValidMeld(meld.cards).valid;
     const isDropTarget = dropTargetMeldId === meld.id;
     const meldTypeClass = meldValid
       ? (meld.type === 'run' ? 'irummy-meld-type-run' : 'irummy-meld-type-set')
@@ -1587,9 +1596,15 @@ export function IsraeliRummyGameTable({
             order (workingMelds order is preserved by the drop handlers).
             Invalid / in-progress groups are visually distinguished via the
             `irummy-meld-invalid` class applied by renderMeldGroup — they do
-            NOT jump to a separate section when a drag flips validity. The
-            builder slot is the first grid child with `order: -1` so
-            toggling its visibility doesn't shift melds below. */}
+            NOT jump to a separate section when a drag flips validity.
+
+            The "+ New Set" builder slot uses `order: 9999` so it renders
+            visually LAST, after every meld. It used to be first (`order: -1`),
+            but a first-child slot that pops in when a drag begins shoves every
+            meld to the right (~100px) — that was half of the "the whole table
+            rearranges the moment I drag a tile" complaint, and it also made
+            drops miss because the target meld slid out from under the pointer.
+            Rendering it last means existing melds never move when it appears. */}
         <div className="irummy-melds-grid">
           {showNewSlot && (
             <div
@@ -1602,7 +1617,7 @@ export function IsraeliRummyGameTable({
                 builderValid ? 'irummy-melds-new-slot-valid' : '',
                 !builderValid && builderCards.length > 0 ? 'irummy-melds-new-slot-invalid' : '',
               ].filter(Boolean).join(' ')}
-              style={{ order: -1 }}
+              style={{ order: 9999 }}
               aria-label={t('israeliRummy.newMeldSlot')}
             >
               <div className="irummy-melds-new-slot-label">
