@@ -186,6 +186,46 @@
 .mj-face-wind .mj-glyph { color: #16324f; }
 .mj-face-flower .mj-glyph { color: #167a3c; }
 .mj-face-season .mj-glyph { color: #c1651b; }
+
+/* Flowers match any flower and seasons match any season. The tinted face plus
+   the 花 / 季 corner mark say so at a glance, so a legal 梅+菊 pair doesn't read
+   as the game accepting a wrong match. */
+.mj-face-flower,
+.mj-face-season {
+  position: relative;
+  border-radius: inherit;
+}
+
+.mj-face-flower { background: rgba(22, 122, 60, 0.17); }
+.mj-face-season { background: rgba(193, 101, 27, 0.18); }
+
+/* The corner glyph is unreadable once tiles shrink to ~25px wide on a phone, so
+   the family signal that has to survive every tile size is this solid band. */
+.mj-face-flower::after,
+.mj-face-season::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 13%;
+}
+
+.mj-face-flower::after { background: #167a3c; }
+.mj-face-season::after { background: #c1651b; }
+
+.mj-group-mark {
+  position: absolute;
+  top: 4%;
+  inset-inline-start: 6%;
+  font-size: 0.22em;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+.mj-face-flower .mj-group-mark { color: #167a3c; }
+.mj-face-season .mj-group-mark { color: #c1651b; }
 .mj-dragon-1 .mj-glyph { color: #b3261e; }
 .mj-dragon-2 .mj-glyph { color: #157a45; }
 .mj-dragon-3 .mj-glyph { color: #1a3fa0; }
