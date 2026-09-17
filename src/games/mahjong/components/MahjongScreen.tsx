@@ -11,7 +11,7 @@ export default function MahjongScreen({ settings, onBack }: GameScreenProps) {
   const { t } = useTranslation();
   const {
     gameState, startGame, tapTile, clearSelection,
-    undo, hint, shuffle, newGame, restartSameTiles, canUndo, bestSeconds,
+    undo, hint, shuffle, newGame, restartSameTiles, canUndo, leaderboard,
   } = useMahjongGame();
 
   const startedRef = useRef(false);
@@ -38,7 +38,7 @@ export default function MahjongScreen({ settings, onBack }: GameScreenProps) {
     <MahjongTable
       gameState={gameState}
       canUndo={canUndo}
-      bestSeconds={bestSeconds}
+      leaderboard={leaderboard}
       onTapTile={tapTile}
       onClearSelection={clearSelection}
       onUndo={undo}

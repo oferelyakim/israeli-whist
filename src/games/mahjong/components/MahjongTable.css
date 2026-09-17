@@ -318,6 +318,236 @@
   flex-wrap: wrap;
 }
 
+/* ─── Win celebration ────────────────────────────────────────── */
+
+.mj-win-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000001;
+  padding: 16px;
+  overflow: hidden;
+  animation: mj-fade-in 0.4s ease-out;
+}
+
+@keyframes mj-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.mj-win-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.mj-particle {
+  position: absolute;
+  top: -44px;
+  animation: mj-fall linear infinite;
+  opacity: 0.9;
+}
+
+@keyframes mj-fall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(112vh) rotate(720deg); opacity: 0.3; }
+}
+
+.mj-win-card {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(135deg, #14361f, #1f5a33);
+  border-radius: 20px;
+  padding: 24px 28px;
+  text-align: center;
+  max-width: 360px;
+  width: 100%;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55), 0 0 60px rgba(255, 215, 0, 0.16);
+  animation: mj-card-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes mj-card-pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.mj-win-trophy {
+  font-size: 54px;
+  line-height: 1;
+  margin-bottom: 4px;
+  animation: mj-trophy-bounce 1s ease-in-out infinite alternate;
+}
+
+@keyframes mj-trophy-bounce {
+  from { transform: scale(1) rotate(-5deg); }
+  to { transform: scale(1.1) rotate(5deg); }
+}
+
+.mj-win-title {
+  font-size: 30px;
+  margin: 0 0 6px;
+  color: #ffd700;
+  text-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+}
+
+.mj-win-celeb {
+  font-size: 15px;
+  margin: 0 0 10px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.mj-win-record,
+.mj-win-perfect {
+  display: inline-block;
+  margin: 0 4px 10px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mj-win-record {
+  background: rgba(255, 215, 0, 0.18);
+  border: 1px solid rgba(255, 215, 0, 0.55);
+  color: #ffd700;
+  animation: mj-record-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes mj-record-glow {
+  0%, 100% { box-shadow: 0 0 6px rgba(255, 215, 0, 0.3); }
+  50% { box-shadow: 0 0 16px rgba(255, 215, 0, 0.65); }
+}
+
+.mj-win-perfect {
+  background: rgba(79, 195, 247, 0.16);
+  border: 1px solid rgba(79, 195, 247, 0.5);
+  color: #9fdcff;
+}
+
+/* ─── Win stats ──────────────────────────────────────────────── */
+
+.mj-win-stats {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 12px 0 8px;
+}
+
+.mj-win-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 4px;
+  background: rgba(0, 0, 0, 0.28);
+  border-radius: 10px;
+}
+
+.mj-win-stat-value {
+  font-size: 19px;
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.mj-win-stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #9ec8ab;
+}
+
+.mj-win-layout {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: #9ec8ab;
+}
+
+/* ─── Best times ─────────────────────────────────────────────── */
+
+.mj-leaderboard {
+  margin-top: 14px;
+  text-align: start;
+}
+
+.mj-leaderboard h3 {
+  font-size: 13px;
+  margin: 0 0 6px;
+  color: #a5d6a7;
+}
+
+.mj-leaderboard-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+}
+
+.mj-leaderboard-list li {
+  display: grid;
+  grid-template-columns: 18px 1fr 1fr auto;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: #cfe3d4;
+}
+
+.mj-leaderboard-list li:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mj-lb-current {
+  background: rgba(255, 215, 0, 0.18) !important;
+  color: #ffe98a;
+  font-weight: 700;
+}
+
+.mj-lb-rank { opacity: 0.6; }
+.mj-lb-time { font-variant-numeric: tabular-nums; }
+.mj-lb-date { opacity: 0.6; font-size: 11px; }
+
+/* ─── Win buttons ────────────────────────────────────────────── */
+
+.mj-win-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.mj-btn-play-again {
+  font-size: 15px;
+  padding: 9px 24px;
+  animation: mj-glow-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes mj-glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 215, 0, 0.35); }
+  50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.65); }
+}
+
+/* Respect a reduced-motion preference — the card and stats still read fine
+   without the falling tiles, the bouncing trophy or the pulsing glows. */
+@media (prefers-reduced-motion: reduce) {
+  .mj-win-particles { display: none; }
+  .mj-win-card,
+  .mj-win-trophy,
+  .mj-win-record,
+  .mj-btn-play-again,
+  .mj-tile-hinted {
+    animation: none;
+  }
+}
+
 /* ─── Phones ─────────────────────────────────────────────────── */
 
 @media (max-width: 699px) {
@@ -325,4 +555,7 @@
   .mj-btn { padding: 4px 8px; font-size: 12px; }
   .mj-stats { font-size: 12px; gap: 8px; }
   .mj-board-area { padding: 2px; }
+  .mj-win-card { padding: 18px 16px; }
+  .mj-win-trophy { font-size: 42px; }
+  .mj-win-title { font-size: 25px; }
 }

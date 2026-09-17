@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MahjongLayoutId, MahjongPhase } from '../types';
-import type { MahjongGameState } from '../types';
+import type { MahjongGameState, MahjongLeaderboardEntry } from '../types';
 import { MAHJONG_LAYOUTS, MAHJONG_LAYOUT_IDS } from '../engine/layouts';
 import { freeTileIds } from '../engine/board';
+import { createRNG } from '../../../utils/random';
 import { MahjongTileFace } from './MahjongTileFace';
 import { useTranslation } from '../../../i18n/LanguageContext';
 import type { TranslationKey } from '../../../i18n/translations';
@@ -21,6 +22,26 @@ const LAYOUT_NAME_KEYS: Record<MahjongLayoutId, TranslationKey> = {
   [MahjongLayoutId.TOWER]: 'mahjong.layout.tower',
 };
 
+const CELEB_KEYS: TranslationKey[] = [
+  'mahjong.celebMsg1',
+  'mahjong.celebMsg2',
+  'mahjong.celebMsg3',
+  'mahjong.celebMsg4',
+  'mahjong.celebMsg5',
+  'mahjong.celebMsg6',
+];
+
+/**
+ * Confetti glyphs. Deliberately NOT from the Unicode mahjong block (U+1F000+):
+ * those lack emoji-font coverage on common platforms and fall back to a blank
+ * white box, which reads as a broken image mid-celebration. 🎴 carries the
+ * tile-game flavour instead.
+ */
+const PARTICLE_GLYPHS = [
+  '\u{1F3B4}', '\u{1F389}', '\u2B50', '\u2728', '\u{1F3C6}', '\u{1F3EE}',
+  '\u{1F38B}', '\u{1F4AB}', '\u{1F38A}', '\u{1F451}', '\u{1F9E7}', '\u{1F3AF}',
+];
+
 function formatClock(totalSeconds: number): string {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
@@ -30,8 +51,8 @@ function formatClock(totalSeconds: number): string {
 export interface MahjongTableProps {
   gameState: MahjongGameState;
   canUndo: boolean;
-  /** Best recorded time for this layout, shown after a win. */
-  bestSeconds: number | null;
+  /** Best times for this layout, shown in the win overlay. */
+  leaderboard: MahjongLeaderboardEntry[];
   onTapTile: (tileId: string) => void;
   onClearSelection: () => void;
   onUndo: () => void;
@@ -45,7 +66,7 @@ export interface MahjongTableProps {
 export function MahjongTable({
   gameState,
   canUndo,
-  bestSeconds,
+  leaderboard,
   onTapTile,
   onClearSelection,
   onUndo,
@@ -95,6 +116,27 @@ export function MahjongTable({
   const hintIds = gameState.hintPair ? new Set(gameState.hintPair) : null;
   const remaining = gameState.tiles.length;
   const won = gameState.phase === MahjongPhase.WON;
+
+  // Confetti and the flavour line are derived from the board seed rather than
+  // Math.random(): react-x rejects impure calls during render, and a seeded
+  // scatter is stable across re-renders (and matches the project convention).
+  const celebIdx = gameState.seed % CELEB_KEYS.length;
+  const particles = useMemo(() => {
+    const rng = createRNG(gameState.seed + 1);
+    return Array.from({ length: 28 }, (_, i) => ({
+      glyph: PARTICLE_GLYPHS[i % PARTICLE_GLYPHS.length],
+      left: rng() * 100,
+      delay: rng() * 2.2,
+      duration: 2.4 + rng() * 2.2,
+      size: 16 + rng() * 20,
+    }));
+  }, [gameState.seed]);
+
+  // A leaderboard row belongs to the run just finished when both its time and
+  // its match count line up — the same test Solitaire's win card uses.
+  const isCurrentRun = (entry: MahjongLeaderboardEntry) =>
+    entry.seconds === gameState.elapsedSeconds && entry.moves === gameState.moves;
+  const isNewRecord = leaderboard.length > 1 && isCurrentRun(leaderboard[0]);
 
   return (
     <div className="mj-table">
@@ -176,16 +218,74 @@ export function MahjongTable({
       ) : null}
 
       {won ? (
-        <div className="mj-overlay">
-          <div className="mj-modal">
-            <h2>{t('mahjong.youWon')}</h2>
-            <p>{t('mahjong.wonMessage', { time: formatClock(gameState.elapsedSeconds), n: gameState.moves })}</p>
-            {bestSeconds !== null ? (
-              <p>{t('mahjong.best', { time: formatClock(bestSeconds) })}</p>
+        <div className="mj-win-overlay">
+          <div className="mj-win-particles" aria-hidden>
+            {particles.map((p, i) => (
+              <span
+                key={i}
+                className="mj-particle"
+                style={{
+                  left: `${p.left}%`,
+                  animationDelay: `${p.delay}s`,
+                  animationDuration: `${p.duration}s`,
+                  fontSize: `${p.size}px`,
+                }}
+              >
+                {p.glyph}
+              </span>
+            ))}
+          </div>
+
+          <div className="mj-win-card">
+            <div className="mj-win-trophy">{'\u{1F3C6}'}</div>
+            <h2 className="mj-win-title">{t('mahjong.youWon')}</h2>
+            <p className="mj-win-celeb">{t(CELEB_KEYS[celebIdx])}</p>
+
+            {isNewRecord ? <p className="mj-win-record">{t('mahjong.newRecord')}</p> : null}
+            {gameState.shufflesUsed === 0 ? (
+              <p className="mj-win-perfect">{t('mahjong.perfectClear')}</p>
             ) : null}
-            <div className="mj-modal-actions">
-              <button className="mj-btn mj-btn-primary" onClick={() => onNewGame()}>
-                {t('mahjong.playAgain')}
+
+            <div className="mj-win-stats">
+              <div className="mj-win-stat">
+                <span className="mj-win-stat-value">{formatClock(gameState.elapsedSeconds)}</span>
+                <span className="mj-win-stat-label">{t('mahjong.statTime')}</span>
+              </div>
+              <div className="mj-win-stat">
+                <span className="mj-win-stat-value">{gameState.moves}</span>
+                <span className="mj-win-stat-label">{t('mahjong.statMatches')}</span>
+              </div>
+              <div className="mj-win-stat">
+                <span className="mj-win-stat-value">{gameState.shufflesUsed}</span>
+                <span className="mj-win-stat-label">{t('mahjong.statShuffles')}</span>
+              </div>
+            </div>
+
+            <p className="mj-win-layout">
+              {t('mahjong.layoutLabel', { name: t(LAYOUT_NAME_KEYS[gameState.layoutId]) })}
+            </p>
+
+            {leaderboard.length > 0 ? (
+              <div className="mj-leaderboard">
+                <h3>{t('mahjong.leaderboard')}</h3>
+                <ol className="mj-leaderboard-list">
+                  {leaderboard.map((entry, i) => (
+                    <li key={i} className={isCurrentRun(entry) ? 'mj-lb-current' : ''}>
+                      <span className="mj-lb-rank">{i + 1}</span>
+                      <span className="mj-lb-time">{formatClock(entry.seconds)}</span>
+                      <span className="mj-lb-moves">
+                        {t('mahjong.movesLabel', { n: entry.moves })}
+                      </span>
+                      <span className="mj-lb-date">{entry.date}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ) : null}
+
+            <div className="mj-win-buttons">
+              <button className="mj-btn mj-btn-primary mj-btn-play-again" onClick={() => onNewGame()}>
+                {t('mahjong.playAgain')} {'\u21BB'}
               </button>
               <button className="mj-btn" onClick={onBack}>
                 {t('common.backToMenu')}

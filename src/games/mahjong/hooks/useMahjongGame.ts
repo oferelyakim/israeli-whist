@@ -3,6 +3,7 @@ import { MahjongLayoutId, MahjongPhase } from '../types';
 import type { MahjongAction, MahjongGameSettings, MahjongGameState } from '../types';
 import { createInitialMahjongState, mahjongReducer } from '../engine/game-reducer';
 import { saveToLeaderboard } from '../engine/leaderboard';
+import type { MahjongLeaderboardEntry } from '../types';
 import { randomSeed } from '../../../utils/random';
 
 const SAVE_KEY = 'mahjong-saved-game';
@@ -78,13 +79,13 @@ export interface UseMahjongGameReturn {
   newGame: (layoutId?: MahjongLayoutId) => void;
   restartSameTiles: () => void;
   canUndo: boolean;
-  /** Best recorded time for the current layout, set when a board is cleared. */
-  bestSeconds: number | null;
+  /** Best times for the current layout, populated when a board is cleared. */
+  leaderboard: MahjongLeaderboardEntry[];
 }
 
 export function useMahjongGame(): UseMahjongGameReturn {
   const [gameState, setGameState] = useState<MahjongGameState | null>(null);
-  const [bestSeconds, setBestSeconds] = useState<number | null>(null);
+  const [leaderboard, setLeaderboard] = useState<MahjongLeaderboardEntry[]>([]);
   const settingsRef = useRef<MahjongGameSettings | null>(null);
   const gameRef = useRef<MahjongGameState | null>(null);
 
@@ -111,8 +112,10 @@ export function useMahjongGame(): UseMahjongGameReturn {
     // so it belongs here rather than in an effect (react-x flags setState in
     // effects as a cascading render).
     if (next.phase === MahjongPhase.WON && prev.phase !== MahjongPhase.WON) {
-      const board = saveToLeaderboard(next.layoutId, next.elapsedSeconds, next.moves);
-      setBestSeconds(board.length > 0 ? board[0].seconds : null);
+      setLeaderboard(saveToLeaderboard(next.layoutId, next.elapsedSeconds, next.moves));
+    } else if (action.type === 'RESTART_SAME_TILES' || action.type === 'DEAL') {
+      // A fresh board must not carry the previous win's table into its overlay.
+      setLeaderboard([]);
     }
   }, []);
 
@@ -151,7 +154,7 @@ export function useMahjongGame(): UseMahjongGameReturn {
     const dealt = mahjongReducer(prev, { type: 'DEAL', seed: randomSeed(), layoutId: nextLayout });
     gameRef.current = dealt;
     setGameState(dealt);
-    setBestSeconds(null);
+    setLeaderboard([]);
   }, []);
 
   return {
@@ -165,6 +168,6 @@ export function useMahjongGame(): UseMahjongGameReturn {
     newGame,
     restartSameTiles: useCallback(() => dispatch({ type: 'RESTART_SAME_TILES' }), [dispatch]),
     canUndo: (gameState?.history.length ?? 0) > 0,
-    bestSeconds,
+    leaderboard,
   };
 }
