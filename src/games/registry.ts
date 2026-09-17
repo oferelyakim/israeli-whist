@@ -151,6 +151,23 @@ export const GAME_REGISTRY: Partial<Record<GameType, GameConfig>> = {
     GameScreen: lazy(() => import('./backgammon/components/BackgammonScreen')),
     MultiplayerScreen: lazy(() => import('./backgammon/components/BackgammonMultiplayerScreen')),
   },
+  [GameType.MAHJONG]: {
+    type: GameType.MAHJONG,
+    displayName: 'Mahjong Solitaire',
+    minPlayers: 1,
+    maxPlayers: 1,
+    defaultPlayers: 1,
+    description: 'Clear the board by matching free tile pairs',
+    rulesSnippet: [
+      'Match two identical tiles to remove them',
+      'A tile is playable only if nothing sits on top of it',
+      'It also needs a free left or right edge',
+      'Flowers match any flower, seasons match any season',
+      'Every deal is guaranteed solvable \u2014 shuffle if you get stuck',
+    ],
+    GameScreen: lazy(() => import('./mahjong/components/MahjongScreen')),
+    MultiplayerScreen: lazy(() => import('./mahjong/components/MahjongMultiplayerScreen')),
+  },
   [GameType.CHECKERS]: {
     type: GameType.CHECKERS,
     displayName: 'registry.checkers.name',

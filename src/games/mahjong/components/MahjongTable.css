@@ -1,0 +1,288 @@
+/* ─── Table shell ────────────────────────────────────────────── */
+
+.mj-table {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-main, 'Segoe UI', sans-serif);
+  color: #fff;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ─── Top bar ────────────────────────────────────────────────── */
+
+.mj-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.35);
+  min-height: 34px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.mj-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  color: #dcd6c8;
+  white-space: nowrap;
+}
+
+.mj-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────── */
+
+.mj-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.3;
+  transition: background 0.15s;
+}
+
+.mj-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.25); }
+.mj-btn:disabled { opacity: 0.4; cursor: default; }
+
+.mj-btn-primary {
+  background: var(--accent, #2e8b57);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.mj-btn-back { background: rgba(0, 0, 0, 0.35); }
+
+/* ─── Board ──────────────────────────────────────────────────── */
+
+.mj-board-area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  overflow: hidden;
+}
+
+.mj-board {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* ─── Tiles ──────────────────────────────────────────────────── */
+
+.mj-tile {
+  position: absolute;
+  isolation: isolate;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 12%;
+  background: linear-gradient(160deg, #fdfaf0 0%, #efe6d0 62%, #d9cdb0 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(120, 100, 60, 0.35),
+    2px 2px 0 rgba(120, 100, 60, 0.55),
+    3px 4px 6px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  cursor: default;
+  transition: transform 0.1s, box-shadow 0.1s, filter 0.1s;
+}
+
+/* Blocked tiles render as disabled buttons, and the app's global
+   `button:disabled { opacity: .5 }` (src/styles/reset.css) would make the whole
+   stack see-through. The recessed look comes from the scrim below instead. */
+.mj-tile:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+/* Playable tiles sit slightly proud of the stack so they read at a glance. */
+.mj-tile-free {
+  cursor: pointer;
+  background: linear-gradient(160deg, #fffdf6 0%, #f5eedd 62%, #e3d9bf 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(120, 100, 60, 0.4),
+    2px 2px 0 rgba(120, 100, 60, 0.55),
+    4px 5px 9px rgba(0, 0, 0, 0.5);
+}
+
+/* Blocked tiles stay readable — a flat scrim reads as "recessed" without the
+   olive cast that a brightness filter gives the cream tile face. */
+.mj-tile-blocked::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(14, 18, 22, 0.26);
+  pointer-events: none;
+}
+
+.mj-tile-blocked .mj-face { opacity: 0.9; }
+
+.mj-tile-free:hover {
+  transform: translateY(-2px);
+}
+
+.mj-tile-selected {
+  box-shadow:
+    inset 0 0 0 2px #ffcc33,
+    2px 2px 0 rgba(120, 100, 60, 0.55),
+    0 0 12px 3px rgba(255, 204, 51, 0.75);
+  transform: translateY(-2px);
+}
+
+.mj-tile-hinted {
+  animation: mj-hint-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes mj-hint-pulse {
+  0%, 100% { box-shadow: inset 0 0 0 2px #4fc3f7, 2px 2px 0 rgba(120, 100, 60, 0.55), 0 0 4px rgba(79, 195, 247, 0.5); }
+  50%      { box-shadow: inset 0 0 0 2px #4fc3f7, 2px 2px 0 rgba(120, 100, 60, 0.55), 0 0 14px 4px rgba(79, 195, 247, 0.9); }
+}
+
+/* ─── Tile faces ─────────────────────────────────────────────── */
+
+.mj-face {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2%;
+  padding: 8%;
+  box-sizing: border-box;
+  line-height: 1;
+}
+
+/* Faces scale off the tile's inline font-size (set to the tile height in JS),
+   so every glyph tracks the responsive tile size without container queries. */
+.mj-glyph {
+  font-size: 0.56em;
+  font-weight: 700;
+}
+
+.mj-numeral {
+  font-size: 0.42em;
+  font-weight: 700;
+  color: #1a3fa0;
+}
+
+.mj-glyph-small {
+  font-size: 0.30em;
+  font-weight: 700;
+  color: #b3261e;
+}
+
+.mj-face-wind .mj-glyph { color: #16324f; }
+.mj-face-flower .mj-glyph { color: #167a3c; }
+.mj-face-season .mj-glyph { color: #c1651b; }
+.mj-dragon-1 .mj-glyph { color: #b3261e; }
+.mj-dragon-2 .mj-glyph { color: #157a45; }
+.mj-dragon-3 .mj-glyph { color: #1a3fa0; }
+
+/* ─── Pips (circles + bamboo) ────────────────────────────────── */
+
+.mj-pips {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 4%;
+}
+
+.mj-pip-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mj-pip-dot {
+  width: 82%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #6ea8ff 0%, #1a3fa0 70%, #10266b 100%);
+}
+
+.mj-pip-bar {
+  width: 34%;
+  height: 88%;
+  border-radius: 40%;
+  background: linear-gradient(180deg, #4dbd78 0%, #157a45 55%, #0d4f2c 100%);
+}
+
+/* ─── Stuck banner ───────────────────────────────────────────── */
+
+.mj-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(150, 40, 40, 0.85);
+  font-size: 13px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+/* ─── Overlays ───────────────────────────────────────────────── */
+
+.mj-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.66);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000000;
+  padding: 16px;
+}
+
+.mj-modal {
+  background: #1f2a24;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 20px 24px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+
+.mj-modal h2 { margin: 0 0 8px; font-size: 20px; }
+.mj-modal p { margin: 0 0 14px; font-size: 14px; color: #cfc8b8; }
+.mj-modal-label { margin-bottom: 8px !important; font-size: 13px !important; }
+
+.mj-layout-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.mj-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ─── Phones ─────────────────────────────────────────────────── */
+
+@media (max-width: 699px) {
+  .mj-top-bar { padding: 3px 6px; gap: 4px; }
+  .mj-btn { padding: 4px 8px; font-size: 12px; }
+  .mj-stats { font-size: 12px; gap: 8px; }
+  .mj-board-area { padding: 2px; }
+}

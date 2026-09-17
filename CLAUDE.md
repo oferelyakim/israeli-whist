@@ -1,9 +1,11 @@
 # Israeli-Whist (multi-game card app)
 
-Vite + React 19 + TypeScript card-game suite. Ten game modes share a common
+Vite + React 19 + TypeScript card-game suite. Eleven game modes share a common
 lobby/scoring/multiplayer infrastructure: WhistAchim, Yaniv, Quartets,
 Solitaire, Shithead, Israeli Rummy (Rummikub-style), Backgammon, Checkers,
-Woodoku (solo block puzzle), and Escape Room (solo timed puzzle stages).
+Mahjong Solitaire (solo tile matching), Woodoku (solo block puzzle), and
+Escape Room (solo timed puzzle stages). Woodoku and Escape Room are currently
+hidden from the menu.
 Multiplayer is built on Firebase Realtime DB; bots run client-side.
 PWA via vite-plugin-pwa.
 
@@ -236,6 +238,100 @@ The result is the **minimum sufficient** clue set — every clue is load-bearing
 
 **Don't** revert to a random-pick-from-pool generator without first updating the regression test target — underdetermined clues are the most player-frustrating bug class in this archetype.
 
+## Mahjong Solitaire (added 2026-09-17)
+
+Solo tile-matching game at `src/games/mahjong/`. Remove matching pairs of *free*
+tiles until the board is empty. Solo only; the multiplayer screen is a stub.
+
+### Board geometry is in HALF-tile units
+
+A tile at `{ layer, x, y }` occupies `[x, x+2) x [y, y+2)`. Half-unit offsets let
+a layout stagger rows — the classic Turtle's left ear and two-tile tail sit on a
+half row (`y = 7`) between the two middle rows. Derived once per layout in
+`engine/board.ts` `getTopology()`:
+
+- **covered** — a slot on `layer + 1` whose x *and* y spans overlap (`|d| < 2`).
+- **left / right neighbour** — same layer, `x` differs by exactly 2, y spans overlap.
+- **free** = nothing covers it AND at least one of left/right is clear.
+
+### Every deal is guaranteed solvable (don't replace this with a shuffle)
+
+`engine/deal.ts` does NOT shuffle tiles onto slots. It assigns *pairs* forward:
+at each step it computes the slots that are free **given that everything still
+unassigned is occupied**, drops one matching pair onto two of them, and removes
+them from the remaining set. Step 1's occupancy is the opening position and each
+later step's occupancy is exactly the position after the previous pair comes off,
+so the assignment order *is* a winning line. `generateSolvableDeal` returns that
+line alongside the tiles.
+
+`SHUFFLE` reuses the same routine over the slots still occupied
+(`reshuffleRemaining`), so a shuffle also hands back a solvable position rather
+than merely an unstuck one. Removal is always by matching pair, so every
+`matchKey` keeps an even count and `regroupIntoPairs` can always re-pair.
+
+A random-assignment generator would deal boards that cannot be finished — the
+worst bug class in this game. Don't swap it in.
+
+**Regression test:** `scripts/test-mahjong-solvable.mts` replays each dealer's own
+line through the REAL reducer (`TAP_TILE` actions) for every layout, so a bug in
+the topology, the match rule, or the reducer fails there instead of stranding a
+player mid-board.
+```
+./node_modules/.bin/esbuild --bundle scripts/test-mahjong-solvable.mts \
+  --platform=node --format=esm --outfile=/tmp/test-mahjong.mjs \
+  --log-level=warning && node /tmp/test-mahjong.mjs
+```
+
+### Layouts
+
+`engine/layouts.ts` ships four, each exactly 144 slots (`validateLayouts()` runs
+at screen mount and refuses a malformed one):
+
+| Id | Shape | Composition |
+|---|---|---|
+| `TURTLE` | 15 x 8 tiles | 87 + 36 + 16 + 4 + 1, the classic board |
+| `PYRAMID` | 12 x 6 | 72 + 40 + 16 + 12 + 4 |
+| `FORTRESS` | 12 x 8 | 96 + 32 + 16 |
+| `TOWER` | 8 x 12 (portrait) | 96 + 36 + 12 |
+
+The wide layouts scale down to ~25px tiles on a phone in portrait, so
+`defaultLayoutForViewport()` in `useMahjongGame.ts` picks `TOWER` the first time
+the app opens on a narrow portrait screen. A stored `mahjong-settings` preference
+always wins over that.
+
+### Tiles are drawn, not Unicode
+
+`MahjongTileFace.tsx` renders faces from CJK glyphs (東南西北 / 中發白 / 萬 /
+flowers / seasons) plus a shared 3x3 pip grid for circles (dots) and bamboo
+(bars). The Unicode mahjong block (U+1F000+) is deliberately unused — several
+of those code points carry emoji presentation and render inconsistently.
+
+Flowers all share one `matchKey`, as do seasons; everything else matches its
+exact twin. Tile faces scale off the tile's inline `font-size` (set to the tile
+height in JS) using `em`, so there are no hardcoded glyph sizes and no container
+queries.
+
+### Sizing
+
+`MahjongTable.tsx` measures the board area with a `ResizeObserver` and picks one
+tile width that fits the whole layout, then derives height, layer offset and
+board box from it. No hardcoded tile sizes.
+
+### Gotcha: the global disabled-button style
+
+Blocked tiles render as `<button disabled>`, and `src/styles/reset.css` has
+`button:disabled { opacity: .5 }` — without the `.mj-tile:disabled { opacity: 1 }`
+override the whole stack goes see-through and you can read three layers at once.
+The recessed look comes from the `.mj-tile-blocked::after` scrim instead.
+
+### Gotcha: the clock effect
+
+The 1-second `TICK` interval in `useMahjongGame` depends on **phase only**. Keying
+it to the whole game state tears the interval down and restarts it on every move,
+so a fast player's clock never advances. Recording a cleared board to the
+leaderboard happens in `dispatch` (the move that cleared it), not in an effect —
+react-x flags `setState` inside an effect as a cascading render.
+
 ### Adding a new game (registry + MainMenu wiring)
 
 When adding any new game (not just an archetype here), there are **four** wiring points — miss the fourth and the menu silently launches Yaniv:
@@ -272,4 +368,5 @@ Archetype `hint()` and `validate()` return strings like `'escape.padlock.clue.di
 - Don't classify "new" Israeli Rummy melds by card value — use ID-based identification (see "First meld" above).
 - Don't reintroduce a rotation/landscape overlay — the portrait + wrapping-rows layout is the target.
 - Don't call `screen.orientation.lock(...)` — it requires fullscreen and silently rejects on most devices.
+- Don't replace the Mahjong pair-assignment dealer with a random shuffle — it would deal unfinishable boards (see "Mahjong Solitaire" above).
 - Don't naively append in the bot layoff loop. `canLayOff` is true if EITHER append OR prepend yields a valid meld (low-end run extensions like 10♣→[J♣,Q♣,K♣] only work as prepend). Always test both `[...meld.cards, card]` and `[card, ...meld.cards]` against `isValidMeld` and pick the valid arrangement — appending blindly produced positionally-invalid runs and `selfValidateCommit` then reverted the entire turn (the "bots only play sets, never lay off" symptom). Regression: `scripts/test-bot-layoff.mts`.
