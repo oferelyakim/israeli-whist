@@ -55,6 +55,20 @@ check('all four flowers share one matchKey',
 check('all four seasons share one matchKey',
   new Set(allTiles.filter((t) => t.suit === MahjongSuit.SEASON).map((t) => t.matchKey)).size === 1);
 
+// Flowers and seasons are the ONLY families where different faces match. Any
+// other matchKey collision would let the board accept a visibly wrong pair.
+{
+  const facesPerKey = new Map<string, Set<string>>();
+  for (const tile of allTiles) {
+    const faces = facesPerKey.get(tile.matchKey) ?? new Set<string>();
+    faces.add(`${tile.suit}-${tile.value}`);
+    facesPerKey.set(tile.matchKey, faces);
+  }
+  const grouped = [...facesPerKey.entries()].filter(([, faces]) => faces.size > 1).map(([key]) => key).sort();
+  check('only FLOWER and SEASON group distinct faces',
+    JSON.stringify(grouped) === JSON.stringify(['FLOWER', 'SEASON']), `grouped keys: ${grouped.join(', ')}`);
+}
+
 // ─── 2. Layouts ──────────────────────────────────────────────────────
 
 console.log('\nLayouts');

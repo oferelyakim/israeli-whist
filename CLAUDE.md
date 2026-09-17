@@ -307,7 +307,14 @@ flowers / seasons) plus a shared 3x3 pip grid for circles (dots) and bamboo
 of those code points carry emoji presentation and render inconsistently.
 
 Flowers all share one `matchKey`, as do seasons; everything else matches its
-exact twin. Tile faces scale off the tile's inline `font-size` (set to the tile
+exact twin. Because that means two *different* faces legitimately match
+(e.g. 梅 + 菊), both families carry three visual cues so a legal pair doesn't
+read as the board accepting a wrong match: a tinted face, a `花` / `季` corner
+mark, and a solid colour band along the bottom edge. The band is the one that
+has to survive every tile size — the corner glyph is unreadable once Turtle
+shrinks tiles to ~25px wide on a phone. Player report, 2026-09-17. The
+regression test asserts `FLOWER` and `SEASON` are the ONLY matchKeys that group
+distinct faces, so a real cross-match bug can't hide behind this rule. Tile faces scale off the tile's inline `font-size` (set to the tile
 height in JS) using `em`, so there are no hardcoded glyph sizes and no container
 queries.
 

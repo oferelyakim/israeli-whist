@@ -69,15 +69,20 @@ export function MahjongTileFace({ tile }: { tile: MahjongTile }) {
           <span className="mj-glyph">{DRAGON_GLYPHS[tile.value - 1]}</span>
         </div>
       );
+    // Flowers match any flower and seasons match any season, so the four faces
+    // in each family carry a shared corner mark and tinted face — without it a
+    // legal 梅/菊 pair looks like the game accepted a wrong match.
     case MahjongSuit.FLOWER:
       return (
         <div className="mj-face mj-face-flower">
+          <span className="mj-group-mark">{'\u82B1'}</span>
           <span className="mj-glyph">{FLOWER_GLYPHS[tile.value - 1]}</span>
         </div>
       );
     case MahjongSuit.SEASON:
       return (
         <div className="mj-face mj-face-season">
+          <span className="mj-group-mark">{'\u5B63'}</span>
           <span className="mj-glyph">{SEASON_GLYPHS[tile.value - 1]}</span>
         </div>
       );
