@@ -318,6 +318,32 @@ distinct faces, so a real cross-match bug can't hide behind this rule. Tile face
 height in JS) using `em`, so there are no hardcoded glyph sizes and no container
 queries.
 
+### Win celebration
+
+`MahjongTable.tsx` renders a Solitaire-style win overlay: falling confetti,
+popping card with a bouncing trophy, a random flavour line, a three-tile stat
+row (time / matches / shuffles), a "Perfect clear" badge when `shufflesUsed` is
+0, a "New record" badge when the finished run tops the table, and the per-layout
+best-times list with the current run highlighted. `useMahjongGame` exposes
+`leaderboard` (written in `dispatch` on the clearing move, cleared on DEAL and
+RESTART_SAME_TILES).
+
+Two constraints here:
+
+- **Confetti glyphs must not come from the Unicode mahjong block** (U+1F000+).
+  Those code points lack emoji-font coverage on common platforms and fall back
+  to a blank white box mid-celebration. `\u{1F3B4}` (🎴) carries the
+  tile-game flavour safely.
+- **Confetti scatter and the flavour line derive from `gameState.seed`**, via
+  `createRNG`, not `Math.random()` — react-x rejects impure calls during render,
+  and a seeded scatter is also stable across re-renders.
+
+The overlay honours `prefers-reduced-motion` (particles hidden, animations off).
+Note when screenshotting it in Playwright: the confetti animation is `infinite`,
+so the page never reaches animation-stable and a plain `screenshot()` can catch
+the 0.4s fade-in mid-way and look washed out. Pass `animations: 'disabled'`, or
+wait ~2s first.
+
 ### Sizing
 
 `MahjongTable.tsx` measures the board area with a `ResizeObserver` and picks one
