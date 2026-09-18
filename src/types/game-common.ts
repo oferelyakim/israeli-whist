@@ -14,6 +14,7 @@ export enum GameType {
   WOODOKU = 'WOODOKU',
   ESCAPE_ROOM = 'ESCAPE_ROOM',
   MAHJONG = 'MAHJONG',
+  WORD_WONDERS = 'WORD_WONDERS',
 }
 
 export enum PlayerType {

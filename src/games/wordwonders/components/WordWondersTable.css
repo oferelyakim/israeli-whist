@@ -1,0 +1,366 @@
+/* ─── Table shell ────────────────────────────────────────────── */
+
+.ww-table {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-main, 'Segoe UI', sans-serif);
+  color: #fff;
+  overflow: hidden;
+  user-select: none;
+  background: linear-gradient(170deg, #0f4527 0%, #0a3019 55%, #07200f 100%);
+}
+
+/* ─── Top bar ────────────────────────────────────────────────── */
+
+.ww-top-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 8px;
+  flex-shrink: 0;
+}
+
+.ww-icon-btn {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 17px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ww-icon-btn:hover { background: rgba(0, 0, 0, 0.45); }
+
+.ww-title-block {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ww-level { font-size: 16px; font-weight: 700; }
+.ww-progress { font-size: 12px; color: #9ec8ab; }
+
+.ww-coins {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 11px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffd166;
+  flex-shrink: 0;
+}
+
+/* ─── Crossword ──────────────────────────────────────────────── */
+
+.ww-board-area {
+  flex-grow: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  overflow: hidden;
+}
+
+.ww-grid {
+  display: grid;
+  flex-shrink: 0;
+}
+
+.ww-cell-blank { width: 100%; height: 100%; }
+
+.ww-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.32);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09);
+  font-weight: 700;
+  color: #14361f;
+  transition: background 0.18s ease;
+}
+
+.ww-cell-shown {
+  background: linear-gradient(160deg, #fffdf6 0%, #f0e7d2 100%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.42);
+  animation: ww-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes ww-pop {
+  from { transform: scale(0.6); }
+  to { transform: scale(1); }
+}
+
+/* ─── Bonus counter + readout ────────────────────────────────── */
+
+.ww-bonus-row {
+  display: flex;
+  justify-content: center;
+  padding: 0 16px 2px;
+  flex-shrink: 0;
+}
+
+.ww-bonus-label {
+  padding: 3px 11px;
+  border-radius: 999px;
+  background: rgba(255, 209, 102, 0.14);
+  border: 1px solid rgba(255, 209, 102, 0.4);
+  color: #ffd166;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.ww-readout {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+
+.ww-readout-reject { animation: ww-shake 0.38s ease-in-out; }
+
+@keyframes ww-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-7px); }
+  75% { transform: translateX(7px); }
+}
+
+.ww-traced { display: flex; gap: 5px; }
+
+.ww-traced-tile {
+  width: 32px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #fffdf6 0%, #f0e7d2 100%);
+  border-radius: 7px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #14361f;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.ww-readout-msg { font-size: 14px; font-weight: 600; color: #ffb4a8; }
+.ww-readout-idle { font-size: 13px; font-weight: 400; color: #9ec8ab; }
+.ww-readout-bonus { color: #ffd166; }
+
+/* ─── Letter wheel ───────────────────────────────────────────── */
+
+.ww-wheel-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ww-wheel {
+  position: relative;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.09) 0%, rgba(0, 0, 0, 0.34) 68%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  touch-action: none;
+}
+
+.ww-trace-line {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ww-letter {
+  position: absolute;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 24px;
+  font-weight: 700;
+  color: #14361f;
+  background: linear-gradient(160deg, #fffdf6 0%, #f0e7d2 100%);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+  transition: transform 0.1s ease;
+}
+
+.ww-letter-on {
+  background: linear-gradient(160deg, #ffd166 0%, #f0a92c 100%);
+  color: #2a1a03;
+  border: 2px solid #fff3cf;
+  box-shadow: 0 0 14px rgba(255, 209, 102, 0.6);
+  transform: scale(1.06);
+}
+
+/* ─── Actions ────────────────────────────────────────────────── */
+
+.ww-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 16px 18px;
+  flex-shrink: 0;
+}
+
+.ww-btn {
+  min-height: 46px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ww-btn:hover:not(:disabled) { background: rgba(0, 0, 0, 0.45); }
+.ww-btn:disabled { opacity: 0.45; cursor: default; }
+
+.ww-btn-primary {
+  background: linear-gradient(160deg, #ffd166 0%, #f0a92c 100%);
+  border: none;
+  color: #2a1a03;
+  font-weight: 700;
+}
+
+.ww-btn-primary:hover:not(:disabled) { filter: brightness(1.06); }
+
+/* ─── Overlays ───────────────────────────────────────────────── */
+
+.ww-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: ww-fade 0.3s ease-out;
+}
+
+@keyframes ww-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.ww-modal {
+  width: 100%;
+  max-width: 340px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 24px 22px;
+  text-align: center;
+  background: linear-gradient(135deg, #14361f 0%, #1f5a33 100%);
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55), 0 0 60px rgba(255, 209, 102, 0.14);
+  animation: ww-pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes ww-pop-in {
+  from { transform: scale(0.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.ww-trophy {
+  font-size: 50px;
+  line-height: 1;
+  animation: ww-bounce 1s ease-in-out infinite alternate;
+}
+
+@keyframes ww-bounce {
+  from { transform: scale(1) rotate(-5deg); }
+  to { transform: scale(1.1) rotate(5deg); }
+}
+
+.ww-modal h2 {
+  margin: 8px 0 4px;
+  font-size: 26px;
+  color: #ffd166;
+  text-shadow: 0 2px 8px rgba(255, 209, 102, 0.35);
+}
+
+.ww-modal p { margin: 0 0 14px; font-size: 14px; color: #cfe3d4; }
+.ww-modal-label { margin-bottom: 8px !important; font-size: 13px !important; }
+.ww-modal-note { font-size: 12px !important; color: #9ec8ab !important; margin-top: 12px !important; }
+
+.ww-stats { display: flex; gap: 8px; margin-bottom: 12px; }
+
+.ww-stat {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 4px;
+  background: rgba(0, 0, 0, 0.28);
+  border-radius: 10px;
+}
+
+.ww-stat-value { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ww-stat-gold { color: #ffd166; }
+.ww-stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #9ec8ab;
+}
+
+.ww-bonus-list { text-align: start; margin-bottom: 4px; }
+.ww-bonus-list h3 { margin: 0 0 7px; font-size: 13px; font-weight: 500; color: #a5d6a7; }
+.ww-bonus-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+
+.ww-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 12px;
+  color: #cfe3d4;
+}
+
+.ww-lang-choices {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.ww-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+/* ─── Phones ─────────────────────────────────────────────────── */
+
+@media (max-width: 699px) {
+  .ww-top-bar { padding: 8px 8px 6px; gap: 8px; }
+  .ww-btn { padding: 0 14px; font-size: 13px; }
+  .ww-actions { padding: 8px 12px 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ww-cell-shown, .ww-modal, .ww-trophy, .ww-readout-reject, .ww-overlay { animation: none; }
+}
