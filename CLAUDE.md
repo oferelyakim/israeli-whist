@@ -1,11 +1,11 @@
 # Israeli-Whist (multi-game card app)
 
-Vite + React 19 + TypeScript card-game suite. Eleven game modes share a common
+Vite + React 19 + TypeScript card-game suite. Twelve game modes share a common
 lobby/scoring/multiplayer infrastructure: WhistAchim, Yaniv, Quartets,
 Solitaire, Shithead, Israeli Rummy (Rummikub-style), Backgammon, Checkers,
-Mahjong Solitaire (solo tile matching), Woodoku (solo block puzzle), and
-Escape Room (solo timed puzzle stages). Woodoku and Escape Room are currently
-hidden from the menu.
+Mahjong Solitaire (solo tile matching), Word Wonders (solo word crossword),
+Woodoku (solo block puzzle), and Escape Room (solo timed puzzle stages).
+Woodoku and Escape Room are currently hidden from the menu.
 Multiplayer is built on Firebase Realtime DB; bots run client-side.
 PWA via vite-plugin-pwa.
 
@@ -365,6 +365,98 @@ so a fast player's clock never advances. Recording a cleared board to the
 leaderboard happens in `dispatch` (the move that cleared it), not in an effect —
 react-x flags `setState` inside an effect as a cascading render.
 
+## Word Wonders (added 2026-09-18)
+
+Solo word game at `src/games/wordwonders/`: swipe a letter wheel to spell words
+that fill a crossword, in English or Hebrew. Solo only; the multiplayer screen
+is a stub.
+
+### The dictionaries are generated offline, not at build time
+
+`scripts/wordlists/gen_data.py` needs Python + `wordfreq`, so it is NOT part of
+`npm run build` — it is run by hand and its output committed:
+
+| File | Source | Words |
+|---|---|---|
+| `data/words-en.ts` | `word-list` npm package (MIT) | 14,989 (8,548 grid-tier) |
+| `data/words-he.ts` | Hspell 1.4 via `dictionary-he` | 30,221 (16,122 grid-tier) |
+
+**Frequency filtering is what makes the game playable, and it is not optional.**
+The first cut used the raw lexicons and produced boards demanding SCLATE and
+RIVELS in English, and strings that are not words at all in Hebrew — both lists
+are spell-checker lexicons, and the packer prefers long words, which lands it
+straight in the obscurities. Words are kept at zipf >= 2.8 (counts as a bonus
+find) and the crossword may only *demand* words at zipf >= 3.4 (the "grid tier",
+stored first in the blob, counted by `*_GRID_COUNT`).
+
+Only the generated lists ship. Hspell is **AGPL**, and its licence covers the
+word lists as well as the code, so the raw lexicon is deliberately not a
+dependency and not committed.
+
+### Hebrew: the grid stores non-final letters
+
+Five Hebrew letters have a final (sofit) glyph. A crossword cell can be the last
+letter of the across word and a middle letter of the down word at once, and only
+one glyph fits — so the grid and every match key use the NON-FINAL form (as
+printed Hebrew crosswords do), and `engine/hebrew.ts` restores the final form for
+anything the player reads as a word.
+
+`toDisplay` works by rule, not a lookup table: 99.96% of the list follows "a word
+ending in כמנפצ is written with the final glyph". The 13 loanwords that do not
+(קליפ, לפטופ, טרמפ …) live in `HE_NO_SOFIT`.
+
+**`HE_NO_SOFIT` is in its own file** (`data/sofit-exceptions.ts`) rather than in
+`words-he.ts`. `hebrew.ts` needs it eagerly, and importing it from the big module
+dragged the whole 334 KB Hebrew dictionary into the main chunk. Keep it split.
+
+### Chunking: one dictionary per language, loaded on demand
+
+`engine/dictionary.ts` reaches each list through a dynamic `import()`, so a
+player who never opens the Hebrew boards never downloads Hebrew. Built sizes:
+game 9 KB gz, English 39 KB gz, Hebrew 77 KB gz. The chunks are `.js`, so the
+service worker precaches them and the game still works offline. Each branch of
+the loader imports its own module — a shared `const mod = cond ? await import(a)
+: await import(b)` unions the two module types and stops compiling.
+
+### Levels are generated, not authored
+
+`data/seeds-{en,he}.ts` hold 320 verified seed words each. A level is
+`buildLevel(dict, seedForLevel(seeds, index), index)` — deterministic in
+(seed, index), which is why progress is stored as nothing but a level number.
+
+Seeds come from `scripts/gen-wordwonders-seeds.mts`, which takes the
+frequency-ranked candidates in `scripts/wordlists/seed_candidates.json` and keeps
+only those the **real engine** can build a board from at several level indices.
+Re-run it if the dictionaries or the packer change.
+
+### Packer rules (engine/packer.ts)
+
+Greedy: longest word first, then each word takes its best-scoring crossing,
+scored on compactness plus interlock with a little noise, retried 24 times.
+Two rules keep boards readable, and both are load-bearing:
+
+- the cells immediately before and after a word must be empty, or it glues onto
+  a neighbour into one longer nonsense run;
+- a cell the word brings in NEW must have empty neighbours across its direction,
+  or it forms an unintended two-letter pair. A cell it SHARES is a crossing and
+  is fine.
+
+### Gotcha: `picked` holds wheel slots, not letter indices
+
+The wheel is scrambled, so `state.picked` stores positions in `wheelOrder` and
+has to be mapped back through it to reach a letter. Indexing `level.letters`
+with a slot directly compiles fine and silently mistraces every word — the
+regression test caught exactly this.
+
+**Regression test:** `scripts/test-wordwonders.mts` builds a level from every
+shipped seed in both languages, checks each grid word is spellable from its own
+wheel, and plays 25 boards per language to completion through the real reducer.
+```
+./node_modules/.bin/esbuild --bundle scripts/test-wordwonders.mts \
+  --platform=node --format=esm --outfile=/tmp/test-ww.mjs \
+  --log-level=warning && node /tmp/test-ww.mjs
+```
+
 ### Adding a new game (registry + MainMenu wiring)
 
 When adding any new game (not just an archetype here), there are **four** wiring points — miss the fourth and the menu silently launches Yaniv:
@@ -401,5 +493,6 @@ Archetype `hint()` and `validate()` return strings like `'escape.padlock.clue.di
 - Don't classify "new" Israeli Rummy melds by card value — use ID-based identification (see "First meld" above).
 - Don't reintroduce a rotation/landscape overlay — the portrait + wrapping-rows layout is the target.
 - Don't call `screen.orientation.lock(...)` — it requires fullscreen and silently rejects on most devices.
+- Don't ship Word Wonders word lists without the frequency filter, and don't add the raw Hspell lexicon as a dependency (AGPL) — see "Word Wonders" above.
 - Don't replace the Mahjong pair-assignment dealer with a random shuffle — it would deal unfinishable boards (see "Mahjong Solitaire" above).
 - Don't naively append in the bot layoff loop. `canLayOff` is true if EITHER append OR prepend yields a valid meld (low-end run extensions like 10♣→[J♣,Q♣,K♣] only work as prepend). Always test both `[...meld.cards, card]` and `[card, ...meld.cards]` against `isValidMeld` and pick the valid arrangement — appending blindly produced positionally-invalid runs and `selfValidateCommit` then reverted the entire turn (the "bots only play sets, never lay off" symptom). Regression: `scripts/test-bot-layoff.mts`.

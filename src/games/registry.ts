@@ -168,6 +168,23 @@ export const GAME_REGISTRY: Partial<Record<GameType, GameConfig>> = {
     GameScreen: lazy(() => import('./mahjong/components/MahjongScreen')),
     MultiplayerScreen: lazy(() => import('./mahjong/components/MahjongMultiplayerScreen')),
   },
+  [GameType.WORD_WONDERS]: {
+    type: GameType.WORD_WONDERS,
+    displayName: 'Word Wonders',
+    minPlayers: 1,
+    maxPlayers: 1,
+    defaultPlayers: 1,
+    description: 'Swipe the letter wheel to fill the crossword',
+    rulesSnippet: [
+      'Swipe the wheel to spell a word from the letters',
+      'Every word fits somewhere in the crossword',
+      'Extra words you find count as bonus words',
+      'Stuck? A hint uncovers one letter',
+      'Play in English or Hebrew',
+    ],
+    GameScreen: lazy(() => import('./wordwonders/components/WordWondersScreen')),
+    MultiplayerScreen: lazy(() => import('./wordwonders/components/WordWondersMultiplayerScreen')),
+  },
   [GameType.CHECKERS]: {
     type: GameType.CHECKERS,
     displayName: 'registry.checkers.name',
