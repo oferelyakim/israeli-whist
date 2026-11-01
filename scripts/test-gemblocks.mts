@@ -81,7 +81,7 @@ console.log('\nShapes');
   check('every shape is anchored at its top-left', unnormalised === 0, `${unnormalised} adrift`);
   check('every shape is orthogonally connected', detached === 0, `${detached} detached`);
   check('no shape is larger than the board',
-    PIECE_CATALOGUE.every((p) => placementsFor(createEmptyGrid(), p).length > 0));
+    PIECE_CATALOGUE.every((p) => placementsFor(createEmptyGrid(), createEmptyGrid(), p).length > 0));
 }
 
 // ─── 2. Clearing rules ───────────────────────────────────────────────
@@ -92,10 +92,12 @@ console.log('\nClearing');
   const board = createEmptyGrid();
   for (let c = 0; c < BOARD_SIZE - 1; c++) board[4][c] = true;
   const gems = createEmptyGrid();
+  // Both gems sit on squares the blocks already hold, so the gap at col 8 is
+  // genuinely empty and the row is genuinely incomplete.
   gems[4][0] = true;
-  gems[4][8] = true;
+  gems[4][5] = true;
 
-  const before = findCompletedLines(board);
+  const before = findCompletedLines(board, gems);
   check('an incomplete row is not a line', before.rows.length === 0);
 
   const result = placeAndClear(
@@ -106,6 +108,30 @@ console.log('\nClearing');
   check('completing a row clears it', result.board[4].every((cell) => !cell));
   check('gems in the cleared row are collected', result.clear.gems === 2, `got ${result.clear.gems}`);
   check('collected gems leave the board', countGems(result.gems) === 0);
+
+  // A gem holds its own square: a row of blocks around a bare gem is complete,
+  // and nothing may be dropped onto the gem to "fill" it. Reported from play,
+  // 2026-11-01 — the old rule made gems obstacles instead of progress.
+  const seated = createEmptyGrid();
+  const seatedGems = createEmptyGrid();
+  for (let c = 0; c < BOARD_SIZE; c++) if (c !== 3) seated[2][c] = true;
+  seatedGems[2][3] = true;
+  check('a bare gem completes the row it sits in',
+    findCompletedLines(seated, seatedGems).rows.includes(2));
+  check('nothing can be placed on a gem',
+    !canPlace(seated, seatedGems, { id: 'i1', cells: [[0, 0]] }, 2, 3));
+  check('a gem does not block the squares around it',
+    canPlace(createEmptyGrid(), seatedGems, { id: 'i1', cells: [[0, 0]] }, 2, 4));
+
+  // That row is already complete, so the next placement anywhere sweeps it.
+  const swept = placeAndClear(
+    seated, seatedGems,
+    { key: 'k', piece: { id: 'i1', cells: [[0, 0]] }, gemIndex: null },
+    8, 0,
+  );
+  check('a row completed by a gem clears and pays out',
+    swept.clear.rows.includes(2) && swept.clear.gems === 1,
+    `rows ${swept.clear.rows.join(',')} gems ${swept.clear.gems}`);
 
   // A gem riding the piece that completes the line is collected in that move.
   const board2 = createEmptyGrid();
@@ -177,7 +203,9 @@ function scoreMove(state: GemBlocksGameState, index: number, row: number, col: n
   const result = placeAndClear(state.board, state.gems, offer, row, col);
   const lines = result.clear.rows.length + result.clear.cols.length + result.clear.boxes.length;
   let occupied = 0;
-  for (const r of result.board) for (const cell of r) if (cell) occupied++;
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) if (result.board[r][c] || result.gems[r][c]) occupied++;
+  }
   return result.clear.gems * 1000 + lines * 60 - occupied;
 }
 
@@ -188,7 +216,7 @@ function playGame(seed: number): GemBlocksGameState {
     for (let index = 0; index < state.offered.length; index++) {
       const offer = state.offered[index];
       if (!offer) continue;
-      for (const [row, col] of placementsFor(state.board, offer.piece)) {
+      for (const [row, col] of placementsFor(state.board, state.gems, offer.piece)) {
         const score = scoreMove(state, index, row, col);
         if (!best || score > best.score) best = { index, row, col, score };
       }
@@ -199,13 +227,13 @@ function playGame(seed: number): GemBlocksGameState {
   return state;
 }
 
-console.log('\nFull games (greedy bot, 40 seeds)');
+console.log('\nFull games (greedy bot, 100 seeds)');
 {
   let won = 0;
   let lost = 0;
   let stalled = 0;
   let totalMoves = 0;
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < 100; i++) {
     const end = playGame(i * 7919 + 101);
     if (end.phase === GemPhase.WON) { won++; totalMoves += end.moves; }
     else if (end.phase === GemPhase.GAME_OVER) lost++;
@@ -213,10 +241,12 @@ console.log('\nFull games (greedy bot, 40 seeds)');
   }
   check('every game reaches a real ending', stalled === 0, `${stalled} stalled mid-game`);
   check('the goal is reachable', won > 0, `${won} wins, ${lost} losses`);
-  // A competent player should nearly always get there; if this drops the gem
-  // supply or the clearing rules have regressed.
-  check('a greedy player wins at least 3 games in 4', won >= 30, `${won}/40 won`);
-  console.log(`      (${won} won, ${lost} lost of 40)`);
+  // Measured over 200 seeds: 73%. Forty seeds was too few to tune on — it read
+  // 85% for a build that was really 78%. The floor below leaves room for the
+  // noise a 100-seed sample still carries; a drop past it means the gem supply,
+  // the clearing rules or the shape weighting has regressed.
+  check('a greedy player wins about 7 games in 10', won >= 65, `${won}/100 won`);
+  console.log(`      (${won} won, ${lost} lost of 100)`);
   if (won > 0) console.log(`      (average ${(totalMoves / won).toFixed(1)} moves per win)`);
 }
 
@@ -228,20 +258,20 @@ console.log('\nReducer rules');
   check('board starts empty', start.board.every((r) => r.every((c) => !c)));
   check('the opening board is seeded with gems', countGems(start.gems) === 4, `${countGems(start.gems)}`);
   check('three shapes are offered', start.offered.filter(Boolean).length === 3);
-  check('a fresh board has a legal move', hasAnyPlacement(start.board, start.offered));
+  check('a fresh board has a legal move', hasAnyPlacement(start.board, start.gems, start.offered));
 
   const picked = gemBlocksReducer(start, { type: 'SELECT_PIECE', index: 0 });
   check('a shape can be selected', picked.selectedIndex === 0);
 
   const offer = start.offered[0]!;
-  const spot = placementsFor(start.board, offer.piece)[0];
+  const spot = placementsFor(start.board, start.gems, offer.piece)[0];
   const placed = gemBlocksReducer(picked, { type: 'PLACE_PIECE', index: 0, row: spot[0], col: spot[1] });
   check('placing consumes the shape', placed.offered[0] === null);
   check('placing counts a move', placed.moves === 1);
 
   // Dropping onto occupied squares must be refused, not silently allowed.
   const blocked = gemBlocksReducer(placed, { type: 'PLACE_PIECE', index: 1, row: spot[0], col: spot[1] });
-  const overlaps = !canPlace(placed.board, placed.offered[1]!.piece, spot[0], spot[1]);
+  const overlaps = !canPlace(placed.board, placed.gems, placed.offered[1]!.piece, spot[0], spot[1]);
   check('an overlapping placement is refused', !overlaps || blocked === placed);
 
   // The tray only refills once all three have gone.
@@ -249,7 +279,7 @@ console.log('\nReducer rules');
   for (let i = 1; i < 3; i++) {
     const o = s.offered[i];
     if (!o) continue;
-    const at = placementsFor(s.board, o.piece)[0];
+    const at = placementsFor(s.board, s.gems, o.piece)[0];
     const mid = gemBlocksReducer(s, { type: 'PLACE_PIECE', index: i, row: at[0], col: at[1] });
     if (i < 2) check(`tray is not refilled after ${i + 1} of 3`, mid.offered.filter(Boolean).length === 2 - i);
     s = mid;

@@ -55,7 +55,7 @@ export function gemBlocksReducer(
       if (state.phase !== GemPhase.PLAYING) return state;
       const offer = state.offered[action.index];
       if (!offer) return state;
-      if (!canPlace(state.board, offer.piece, action.row, action.col)) return state;
+      if (!canPlace(state.board, state.gems, offer.piece, action.row, action.col)) return state;
 
       const result = placeAndClear(state.board, state.gems, offer, action.row, action.col);
 
@@ -73,7 +73,7 @@ export function gemBlocksReducer(
       }
 
       const won = gemsCollected >= state.goal;
-      const stuck = !won && !hasAnyPlacement(result.board, offered);
+      const stuck = !won && !hasAnyPlacement(result.board, result.gems, offered);
 
       return {
         ...state,
