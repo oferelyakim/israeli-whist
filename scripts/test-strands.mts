@@ -195,6 +195,28 @@ const sample: StrandsLevel[] = [];
   check('no final Hebrew letter reaches the grid', noSofit === built, `${noSofit}/${built}`);
   console.log(`      (${(wordCount / Math.max(1, built)).toFixed(1)} words per board across ${built} boards)`);
 
+  // A grid cell holds one LETTER. A geresh, an apostrophe or a stray space in
+  // a pool would be written into the board as if it were one — caught exactly
+  // this way when a dish name carried a geresh.
+  {
+    const alphabet: Record<StrandsLang, RegExp> = {
+      en: /^[A-Z]+$/,
+      he: /^[\u05d0-\u05ea]+$/,
+    };
+    const strays: string[] = [];
+    const scan = (lang: StrandsLang, themes: readonly StrandsTheme[]) => {
+      for (const theme of themes) {
+        for (const word of [theme.spangram, ...theme.words]) {
+          const key = gridKey(lang, word);
+          if (!alphabet[lang].test(key)) strays.push(`${theme.id}:${word}`);
+        }
+      }
+    };
+    scan('en', EN_THEMES);
+    scan('he', HE_THEMES);
+    check('every pool word is letters only', strays.length === 0, strays.join(', '));
+  }
+
   check('a Hebrew word folds its final letter for the grid',
     gridKey('he', 'לימון') === 'לימונ');
   check('a spangram loses its spaces', gridKey('en', 'FRUIT SALAD') === 'FRUITSALAD');
