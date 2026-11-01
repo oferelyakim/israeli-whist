@@ -140,6 +140,12 @@
   100% { background: rgba(0, 0, 0, 0.3); transform: scale(1); }
 }
 
+/* A square held by a gem alone — filled, but cooler, so it reads as a gem
+   seat rather than a block the player laid down. */
+.gb-cell-gemseat {
+  background: linear-gradient(160deg, #cfeef4 0%, #9ed6e4 55%, #6fb8cc 100%);
+}
+
 .gb-gem { display: block; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45)); }
 
 /* ─── Tray ───────────────────────────────────────────────────── */

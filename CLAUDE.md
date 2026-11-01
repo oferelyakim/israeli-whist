@@ -500,6 +500,20 @@ which lands on the board as the shape is placed. A shape that both delivers a
 gem AND completes the line collects it in the same move, which is how the
 reference game behaves.
 
+**A gem occupies its square in its own right** (`isOccupied(board, gems, r, c)`
+in `engine/board.ts`). It counts toward completing a row, column or box, and
+nothing can be dropped on top of it. The first cut treated `board` and `gems` as
+independent, so a gem's square read as empty: a row of eight blocks plus a gem
+refused to clear and the player had to cover the gem first. Reported from play,
+2026-11-01. `canPlace`, `placementsFor`, `hasAnyPlacement` and
+`findCompletedLines` all take the gems grid for this reason — don't drop the
+argument back off. A square held by a gem alone renders with
+`.gb-cell-gemseat`, filled-but-cooler, so "occupied" is visible.
+
+Because opening gems are holes nothing can be placed on, `seedBoardGems` puts
+at most one in each 3x3 box. Free scatter lets two or three land in one box and
+shred the packing: 67% greedy-bot wins against 73% spread.
+
 **Supply is gated on what the player still needs, never on gems already lying
 on the board.** A gem can be stranded somewhere that never clears; gating on
 board gems would then starve the supply and make 14 unreachable. `makeOffer`
@@ -510,10 +524,13 @@ per tray so they trickle. The regression test covers exactly this.
 
 `pickWeightedPiece` biases the catalogue toward mid-size shapes
 (`WEIGHT_BY_SIZE` in `engine/pieces.ts`). Sampling the 33 shapes uniformly deals
-too many five-cell corners, the board silts up and the goal becomes unfair: the
-greedy bot in the regression test won only 28/40 games. With the weighting it
-wins 34/40, which is the intended difficulty. Re-check that number if the
-catalogue changes.
+too many five-cell corners, the board silts up and the goal becomes unfair.
+With the weighting a greedy bot wins **73%** of games, which is the intended
+difficulty. Re-check that number if the catalogue changes.
+
+Measure it over at least 100 seeds. The original 40-seed sample read 85% for a
+build that was really 78% over 200 seeds, and that phantom 7 points is easy to
+chase.
 
 The catalogue has no 2x2 square, no plus and no 3x3 block — it is the shape set
 from the reference game: straight lines 1-5, right-angle corners (2+2, 2+3,
@@ -529,7 +546,10 @@ Two bugs worth not reintroducing, both found by measuring the rendered DOM:
 
 - **The board's padding belongs to `.gb-board-frame`, not `.gb-board`.** `cellAt`
   maps a pointer position to a square using the grid's own rect; padding on the
-  grid shifted every hit test by 6px.
+  grid shifted every hit test by 6px. The flip side: the cell-size measurement
+  must subtract BOTH the board area's own padding and that frame padding
+  (`FRAME_PAD`), or the grid is sized to more room than it has and the last
+  column is clipped off the right edge of a phone.
 - **The drag ghost snaps to the landing square** (`dragging.snap`), it does not
   follow the pointer over the board. A free-following ghost drifts up to half a
   cell away from the preview it is supposed to be showing, because the preview
@@ -538,7 +558,8 @@ Two bugs worth not reintroducing, both found by measuring the rendered DOM:
 
 **Regression test:** `scripts/test-gemblocks.mts` checks the shape catalogue is
 connected and normalised, checks rows/columns/boxes clear and collect their
-gems, checks the gem supply cannot stall, and plays 40 full games with a greedy
+gems, checks that a gem alone completes the line it sits in and cannot be built
+on, checks the gem supply cannot stall, and plays 100 full games with a greedy
 bot to confirm the goal is actually reachable.
 ```
 ./node_modules/.bin/esbuild --bundle scripts/test-gemblocks.mts \

@@ -9,6 +9,8 @@ import './GemBlocksTable.css';
 const CELL_GAP = 3;
 const CELL_MIN = 22;
 const CELL_MAX = 46;
+/** Must match the padding on `.gb-board-frame`; the grid sits inside it. */
+const FRAME_PAD = 6;
 const TRAY_CELL = 17;
 const TRAY_GAP = 2;
 /** A dragged piece rides this far above the finger so it stays visible. */
@@ -132,8 +134,14 @@ export function GemBlocksTable({
     const measure = () => {
       const { width, height } = el.getBoundingClientRect();
       if (width <= 0 || height <= 0) return;
-      const byWidth = (width - (BOARD_SIZE - 1) * CELL_GAP) / BOARD_SIZE;
-      const byHeight = (height - (BOARD_SIZE - 1) * CELL_GAP) / BOARD_SIZE;
+      // The rect covers the area's own padding, and the frame adds its own
+      // inside that. Both have to come off the budget or the grid is sized to
+      // more room than it has and the last column is clipped.
+      const pad = getComputedStyle(el);
+      const insetX = parseFloat(pad.paddingLeft) + parseFloat(pad.paddingRight) + FRAME_PAD * 2;
+      const insetY = parseFloat(pad.paddingTop) + parseFloat(pad.paddingBottom) + FRAME_PAD * 2;
+      const byWidth = (width - insetX - (BOARD_SIZE - 1) * CELL_GAP) / BOARD_SIZE;
+      const byHeight = (height - insetY - (BOARD_SIZE - 1) * CELL_GAP) / BOARD_SIZE;
       setCellSize(Math.max(CELL_MIN, Math.min(CELL_MAX, Math.floor(Math.min(byWidth, byHeight)))));
     };
     measure();
@@ -154,13 +162,13 @@ export function GemBlocksTable({
 
   const previewCells = useMemo(() => {
     if (!activeOffer || !anchor) return null;
-    const ok = canPlace(board, activeOffer.piece, anchor.row, anchor.col);
+    const ok = canPlace(board, gems, activeOffer.piece, anchor.row, anchor.col);
     const keys = new Set<string>();
     for (const [dr, dc] of activeOffer.piece.cells) {
       keys.add(`${anchor.row + dr},${anchor.col + dc}`);
     }
     return { keys, ok };
-  }, [activeOffer, anchor, board]);
+  }, [activeOffer, anchor, board, gems]);
 
   /** Board cell under a client point, or null when outside the grid. */
   const cellAt = useCallback((clientX: number, clientY: number) => {
@@ -240,13 +248,13 @@ export function GemBlocksTable({
       // A drag drops the piece where the preview sat; a tap just leaves it
       // selected, so the board can be tapped next.
       const offer = offered[grab.index];
-      if (offer && anchor && canPlace(board, offer.piece, anchor.row, anchor.col)) {
+      if (offer && anchor && canPlace(board, gems, offer.piece, anchor.row, anchor.col)) {
         onPlacePiece(grab.index, anchor.row, anchor.col);
       }
       setAnchor(null);
     }
     movedRef.current = false;
-  }, [offered, anchor, board, onPlacePiece]);
+  }, [offered, anchor, board, gems, onPlacePiece]);
 
   const handleBoardClick = useCallback((row: number, col: number) => {
     if (over || selectedIndex === null) return;
@@ -257,8 +265,8 @@ export function GemBlocksTable({
     const { rows, cols } = pieceSize(offer.piece);
     const r = row - Math.floor((rows - 1) / 2);
     const c = col - Math.floor((cols - 1) / 2);
-    if (canPlace(board, offer.piece, r, c)) onPlacePiece(selectedIndex, r, c);
-  }, [over, selectedIndex, offered, board, onPlacePiece]);
+    if (canPlace(board, gems, offer.piece, r, c)) onPlacePiece(selectedIndex, r, c);
+  }, [over, selectedIndex, offered, board, gems, onPlacePiece]);
 
   const boardPx = BOARD_SIZE * cellSize + (BOARD_SIZE - 1) * CELL_GAP;
   const clearedKeys = lastClear ? new Set(lastClear.cells) : null;
@@ -315,7 +323,11 @@ export function GemBlocksTable({
             const inPreview = previewCells?.keys.has(key) ?? false;
 
             const classes = ['gb-cell'];
-            if (filled) classes.push('gb-cell-filled');
+            // A gem holds its square the same way a block does, so it has to
+            // look held: an empty-looking square inside a row that clears is
+            // the thing players read as a bug.
+            if (filled || gem) classes.push('gb-cell-filled');
+            if (gem && !filled) classes.push('gb-cell-gemseat');
             if (col % 3 === 0 && col > 0) classes.push('gb-cell-boxl');
             if (row % 3 === 0 && row > 0) classes.push('gb-cell-boxt');
             if (inPreview) classes.push(previewCells?.ok ? 'gb-cell-ok' : 'gb-cell-bad');
