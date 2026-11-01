@@ -9,7 +9,7 @@ export default function PipsScreen({ settings, onBack }: GameScreenProps) {
   const { t } = useTranslation();
   const {
     gameState, startGame, selectDomino, rotate, place, lift,
-    clearBoard, hint, nextLevel, restartLevel,
+    clearBoard, hint, nextLevel, restartLevel, setDifficulty,
   } = usePipsGame();
 
   const startedRef = useRef(false);
@@ -39,6 +39,7 @@ export default function PipsScreen({ settings, onBack }: GameScreenProps) {
       onHint={hint}
       onNextLevel={nextLevel}
       onRestart={restartLevel}
+      onSetDifficulty={setDifficulty}
       onBack={onBack}
     />
   );
