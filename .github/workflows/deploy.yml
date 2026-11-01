@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - master
+  # Lets a failed deploy be retried from the Actions tab without inventing a
+  # commit — the deploy step can fail for reasons that have nothing to do with
+  # the code (see the Firebase credentials note in CLAUDE.md).
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
