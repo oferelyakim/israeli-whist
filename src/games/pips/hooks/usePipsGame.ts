@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { PipsPhase } from '../types';
+import { PipsDifficulty, PipsPhase } from '../types';
 import type {
   CellKey,
   Orientation,
@@ -14,21 +14,63 @@ import { buildLevel } from '../engine/levels';
 const PROGRESS_KEY = 'pips-progress';
 const SAVE_KEY = 'pips-saved-game';
 
+const DIFFICULTIES = [
+  PipsDifficulty.EASY, PipsDifficulty.MEDIUM, PipsDifficulty.HARD,
+] as const;
+
+function blankLevels(): Record<PipsDifficulty, number> {
+  return {
+    [PipsDifficulty.EASY]: 0,
+    [PipsDifficulty.MEDIUM]: 0,
+    [PipsDifficulty.HARD]: 0,
+  };
+}
+
+function isDifficulty(value: unknown): value is PipsDifficulty {
+  return DIFFICULTIES.some((d) => d === value);
+}
+
+/** Which difficulty the old auto-ramp would have been on at this puzzle. */
+function rampedDifficulty(index: number): PipsDifficulty {
+  if (index < 4) return PipsDifficulty.EASY;
+  if (index < 12) return PipsDifficulty.MEDIUM;
+  return PipsDifficulty.HARD;
+}
+
 function loadProgress(): PipsProgress {
   try {
     const raw = localStorage.getItem(PROGRESS_KEY);
-    if (!raw) return { levelIndex: 0 };
-    const saved = JSON.parse(raw) as PipsProgress;
-    const index = Number(saved.levelIndex);
-    return { levelIndex: Number.isFinite(index) && index >= 0 ? index : 0 };
-  } catch {
-    return { levelIndex: 0 };
-  }
+    if (raw) {
+      const saved = JSON.parse(raw) as Partial<PipsProgress> & { levelIndex?: number };
+
+      // Saves from before the difficulty picker held a single ramped index.
+      // Drop it onto the track it would have been on rather than resetting,
+      // so a player mid-way does not lose their place.
+      if (saved.levels === undefined && typeof saved.levelIndex === 'number') {
+        const index = Math.max(0, Math.floor(saved.levelIndex));
+        const difficulty = rampedDifficulty(index);
+        const levels = blankLevels();
+        levels[difficulty] = index;
+        return { difficulty, levels };
+      }
+
+      const difficulty = isDifficulty(saved.difficulty) ? saved.difficulty : PipsDifficulty.EASY;
+      const levels = blankLevels();
+      for (const d of DIFFICULTIES) {
+        const value = saved.levels?.[d];
+        if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
+          levels[d] = Math.floor(value);
+        }
+      }
+      return { difficulty, levels };
+    }
+  } catch { /* ignore parse errors */ }
+  return { difficulty: PipsDifficulty.EASY, levels: blankLevels() };
 }
 
-function saveProgress(levelIndex: number): void {
+function saveProgress(progress: PipsProgress): void {
   try {
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ levelIndex }));
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
   } catch { /* ignore quota errors */ }
 }
 
@@ -38,7 +80,7 @@ function saveGame(state: PipsGameState): void {
   } catch { /* ignore quota errors */ }
 }
 
-function loadSavedGame(): PipsGameState | null {
+function loadSavedGame(difficulty: PipsDifficulty, levelIndex: number): PipsGameState | null {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
@@ -48,6 +90,8 @@ function loadSavedGame(): PipsGameState | null {
       return null;
     }
     if (!Array.isArray(saved.placements)) return null;
+    // Only resume a board from the track the player is actually on.
+    if (saved.puzzle.difficulty !== difficulty || saved.levelIndex !== levelIndex) return null;
     return { ...saved, selectedId: null };
   } catch {
     return null;
@@ -62,8 +106,7 @@ function clearSavedGame(): void {
 
 export interface UsePipsGameReturn {
   gameState: PipsGameState | null;
-  /** How far the player has got, so the menu can offer the next board. */
-  unlocked: number;
+  difficulty: PipsDifficulty;
   startGame: (settings: PipsSettings) => void;
   selectDomino: (id: string | null) => void;
   rotate: () => void;
@@ -73,12 +116,16 @@ export interface UsePipsGameReturn {
   hint: () => void;
   nextLevel: () => void;
   restartLevel: () => void;
+  setDifficulty: (difficulty: PipsDifficulty) => void;
 }
 
 export function usePipsGame(): UsePipsGameReturn {
   const [gameState, setGameState] = useState<PipsGameState | null>(null);
-  const [unlocked, setUnlocked] = useState(0);
+  const [progress, setProgress] = useState<PipsProgress>(
+    () => ({ difficulty: PipsDifficulty.EASY, levels: blankLevels() }),
+  );
   const stateRef = useRef<PipsGameState | null>(null);
+  const progressRef = useRef<PipsProgress>(progress);
 
   const commit = useCallback((next: PipsGameState) => {
     stateRef.current = next;
@@ -98,15 +145,19 @@ export function usePipsGame(): UsePipsGameReturn {
     commit(next);
 
     // Clearing a board is a consequence of the move that cleared it, so the
-    // unlock is written here rather than in an effect (react-x treats setState
+    // counter is written here rather than in an effect (react-x treats setState
     // inside an effect as a cascading render).
     if (next.phase === PipsPhase.SOLVED && prev.phase !== PipsPhase.SOLVED) {
-      const reached = next.levelIndex + 1;
-      setUnlocked((current) => {
-        const best = Math.max(current, reached);
-        saveProgress(best);
-        return best;
-      });
+      const difficulty = next.puzzle.difficulty;
+      const current = progressRef.current;
+      const reached = Math.max(current.levels[difficulty], next.levelIndex + 1);
+      const updated: PipsProgress = {
+        difficulty,
+        levels: { ...current.levels, [difficulty]: reached },
+      };
+      progressRef.current = updated;
+      setProgress(updated);
+      saveProgress(updated);
       clearSavedGame();
     }
   }, [commit]);
@@ -128,26 +179,36 @@ export function usePipsGame(): UsePipsGameReturn {
   }, [phase, levelIndex, dispatch]);
 
   const startGame = useCallback((settings: PipsSettings) => {
-    const progress = loadProgress();
-    setUnlocked(progress.levelIndex);
-    const saved = loadSavedGame();
+    const stored = loadProgress();
+    progressRef.current = stored;
+    setProgress(stored);
+
+    const index = stored.levels[stored.difficulty];
+    const saved = loadSavedGame(stored.difficulty, index);
     if (saved) {
       commit({ ...saved, settings });
       return;
     }
-    commit(createInitialPipsState(settings, progress.levelIndex, buildLevel(progress.levelIndex)));
+    commit(createInitialPipsState(settings, index, buildLevel(index, stored.difficulty)));
   }, [commit]);
 
-  const openLevel = useCallback((index: number) => {
+  const openLevel = useCallback((index: number, difficulty: PipsDifficulty) => {
     const prev = stateRef.current;
     if (!prev) return;
     clearSavedGame();
-    commit(createInitialPipsState(prev.settings, index, buildLevel(index)));
+    const updated: PipsProgress = {
+      difficulty,
+      levels: { ...progressRef.current.levels, [difficulty]: index },
+    };
+    progressRef.current = updated;
+    setProgress(updated);
+    saveProgress(updated);
+    commit(createInitialPipsState(prev.settings, index, buildLevel(index, difficulty)));
   }, [commit]);
 
   return {
     gameState,
-    unlocked,
+    difficulty: progress.difficulty,
     startGame,
     selectDomino: useCallback((id: string | null) => dispatch({ type: 'SELECT_DOMINO', id }), [dispatch]),
     rotate: useCallback(() => dispatch({ type: 'ROTATE' }), [dispatch]),
@@ -161,11 +222,17 @@ export function usePipsGame(): UsePipsGameReturn {
     hint: useCallback(() => dispatch({ type: 'HINT' }), [dispatch]),
     nextLevel: useCallback(() => {
       const prev = stateRef.current;
-      if (prev) openLevel(prev.levelIndex + 1);
+      if (prev) openLevel(prev.levelIndex + 1, prev.puzzle.difficulty);
     }, [openLevel]),
     restartLevel: useCallback(() => {
       const prev = stateRef.current;
-      if (prev) openLevel(prev.levelIndex);
+      if (prev) openLevel(prev.levelIndex, prev.puzzle.difficulty);
+    }, [openLevel]),
+    setDifficulty: useCallback((difficulty: PipsDifficulty) => {
+      const prev = stateRef.current;
+      if (!prev || prev.puzzle.difficulty === difficulty) return;
+      // Pick up that track where it was left, rather than starting it over.
+      openLevel(progressRef.current.levels[difficulty], difficulty);
     }, [openLevel]),
   };
 }

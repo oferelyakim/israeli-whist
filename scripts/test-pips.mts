@@ -22,7 +22,7 @@ import {
 } from '../src/games/pips/engine/board';
 import { DIFFICULTY_SPEC, generatePuzzle } from '../src/games/pips/engine/generate';
 import { solve } from '../src/games/pips/engine/solver';
-import { buildLevel, difficultyForLevel } from '../src/games/pips/engine/levels';
+import { buildLevel, seedForLevel } from '../src/games/pips/engine/levels';
 import { createInitialPipsState, pipsReducer } from '../src/games/pips/engine/game-reducer';
 import { PipsDifficulty, PipsPhase } from '../src/games/pips/types';
 import type { CellKey, PipsGameState, PipsPuzzle, PipsSettings } from '../src/games/pips/types';
@@ -306,21 +306,27 @@ console.log('\nHints');
 
 console.log('\nLevels');
 {
-  const a = buildLevel(7);
-  const b = buildLevel(7);
-  check('the same level number rebuilds the same board',
+  const a = buildLevel(7, PipsDifficulty.MEDIUM);
+  const b = buildLevel(7, PipsDifficulty.MEDIUM);
+  check('the same puzzle number rebuilds the same board',
     JSON.stringify(a) === JSON.stringify(b));
-  check('the difficulty curve climbs',
-    difficultyForLevel(0) === PipsDifficulty.EASY
-    && difficultyForLevel(8) === PipsDifficulty.MEDIUM
-    && difficultyForLevel(20) === PipsDifficulty.HARD);
+
+  // The player picks the difficulty, so a puzzle number means nothing on its
+  // own — it must build the difficulty it was asked for.
+  check('a puzzle is built at the difficulty asked for',
+    DIFFICULTIES.every((d) => buildLevel(3, d).difficulty === d));
+
+  // Same number on two tracks must not reuse a seed, or the boards come back
+  // with the same shape and it reads as a bug.
+  const seeds = new Set(DIFFICULTIES.map((d) => seedForLevel(4, d)));
+  check('each difficulty seeds its own board', seeds.size === DIFFICULTIES.length);
 
   let worst = 0;
   let total = 0;
   const RUNS = 24;
   for (let i = 0; i < RUNS; i++) {
     const started = Date.now();
-    const level = buildLevel(i);
+    const level = buildLevel(i, DIFFICULTIES[i % DIFFICULTIES.length]);
     const took = Date.now() - started;
     total += took;
     if (took > worst) worst = took;

@@ -125,6 +125,12 @@ interface DragState {
   snap: { left: number; top: number } | null;
 }
 
+const DIFFICULTY_CHOICES: ReadonlyArray<{ value: PipsDifficulty; label: 'pips.easy' | 'pips.medium' | 'pips.hard'; tiles: number }> = [
+  { value: PipsDifficulty.EASY, label: 'pips.easy', tiles: 4 },
+  { value: PipsDifficulty.MEDIUM, label: 'pips.medium', tiles: 6 },
+  { value: PipsDifficulty.HARD, label: 'pips.hard', tiles: 8 },
+];
+
 export interface PipsTableProps {
   gameState: PipsGameState;
   onSelectDomino: (id: string | null) => void;
@@ -135,12 +141,13 @@ export interface PipsTableProps {
   onHint: () => void;
   onNextLevel: () => void;
   onRestart: () => void;
+  onSetDifficulty: (difficulty: PipsDifficulty) => void;
   onBack: () => void;
 }
 
 export function PipsTable({
   gameState, onSelectDomino, onRotate, onPlace, onLift,
-  onClear, onHint, onNextLevel, onRestart, onBack,
+  onClear, onHint, onNextLevel, onRestart, onSetDifficulty, onBack,
 }: PipsTableProps) {
   const { t } = useTranslation();
   const areaRef = useRef<HTMLDivElement>(null);
@@ -148,6 +155,7 @@ export function PipsTable({
   const grabRef = useRef<{ x: number; y: number } | null>(null);
   const [cell, setCell] = useState(44);
   const [drag, setDrag] = useState<DragState | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   const { puzzle, placements, selectedId, orientation, phase } = gameState;
   const solved = phase === PipsPhase.SOLVED;
@@ -350,6 +358,16 @@ export function PipsTable({
           <span className="pips-clock">{clock}</span>
           <span>{t('pips.moves', { n: gameState.moves })}</span>
         </div>
+        <button
+          className="pips-icon-btn"
+          onClick={() => setShowSettings(true)}
+          aria-label={t('pips.settings')}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3.2" />
+            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.65 8.6a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.56 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z" />
+          </svg>
+        </button>
       </div>
 
       <p className="pips-instruction">{t('pips.instruction')}</p>
@@ -529,6 +547,36 @@ export function PipsTable({
             vertical={isVertical(drag.orientation)}
             {...tileSpan(cell, isVertical(drag.orientation))}
           />
+        </div>
+      )}
+
+      {showSettings && (
+        <div className="pips-overlay" onClick={() => setShowSettings(false)}>
+          <div className="pips-modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{t('pips.settings')}</h2>
+            <p>{t('pips.settingsNote')}</p>
+            <div className="pips-choices">
+              {DIFFICULTY_CHOICES.map((choice) => (
+                <button
+                  key={choice.value}
+                  className={`pips-choice${puzzle.difficulty === choice.value ? ' pips-choice-on' : ''}`}
+                  onClick={() => {
+                    setShowSettings(false);
+                    onSetDifficulty(choice.value);
+                  }}
+                  aria-pressed={puzzle.difficulty === choice.value}
+                >
+                  <span className="pips-choice-name">{t(choice.label)}</span>
+                  <span className="pips-choice-note">{t('pips.tiles', { n: choice.tiles })}</span>
+                </button>
+              ))}
+            </div>
+            <div className="pips-modal-actions">
+              <button className="pips-btn" onClick={() => setShowSettings(false)}>
+                {t('pips.close')}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

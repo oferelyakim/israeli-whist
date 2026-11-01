@@ -103,8 +103,14 @@ export type PipsAction =
 
 // ─── Saved progress ──────────────────────────────────────────────────
 
+/**
+ * The player picks the difficulty; it is not unlocked by progressing.
+ * Each difficulty keeps its own puzzle counter so switching back and forth
+ * does not restart a track.
+ */
 export interface PipsProgress {
-  levelIndex: number;
+  difficulty: PipsDifficulty;
+  levels: Record<PipsDifficulty, number>;
 }
 
 export interface PipsRecord {

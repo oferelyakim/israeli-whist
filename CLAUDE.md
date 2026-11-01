@@ -571,9 +571,23 @@ bot to confirm the goal is actually reachable.
 ## Pips (added 2026-11-01)
 
 Solo logic puzzle at `src/games/pips/`: fit every domino onto an irregular
-board so each coloured region satisfies its clue. Levels are generated, so
-progress is nothing but a level number. Solo only; the multiplayer screen is a
-stub.
+board so each coloured region satisfies its clue. Solo only; the multiplayer
+screen is a stub.
+
+### The player picks the difficulty; it is not unlocked
+
+A gear in the top bar opens an Easy / Medium / Hard picker. There is no ramp —
+`buildLevel(index, difficulty)` takes the difficulty explicitly, and
+`PipsProgress` holds the chosen one plus a **counter per track**, so switching
+back and forth resumes each where it was left rather than restarting it.
+
+`seedForLevel` folds the difficulty into its hash. Without that, puzzle 1 on
+Easy and puzzle 1 on Hard build from the same seed and come back with the same
+shape, which reads as a bug.
+
+Saves written before the picker held a single ramped index. `loadProgress`
+migrates one onto the track it would have been on rather than resetting it —
+a player mid-way keeps their place.
 
 ### Clue vocabulary
 
