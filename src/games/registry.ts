@@ -219,6 +219,23 @@ export const GAME_REGISTRY: Partial<Record<GameType, GameConfig>> = {
     GameScreen: lazy(() => import('./pips/components/PipsScreen')),
     MultiplayerScreen: lazy(() => import('./pips/components/PipsMultiplayerScreen')),
   },
+  [GameType.STRANDS]: {
+    type: GameType.STRANDS,
+    displayName: 'Strands',
+    minPlayers: 1,
+    maxPlayers: 1,
+    defaultPlayers: 1,
+    description: 'Find the themed words winding through the grid',
+    rulesSnippet: [
+      'Every letter belongs to exactly one theme word',
+      'Drag through touching letters in any direction',
+      'One word is the spangram and crosses the whole board',
+      'Other real words you find earn a hint every three',
+      'Play in English or Hebrew',
+    ],
+    GameScreen: lazy(() => import('./strands/components/StrandsScreen')),
+    MultiplayerScreen: lazy(() => import('./strands/components/StrandsMultiplayerScreen')),
+  },
   [GameType.CHECKERS]: {
     type: GameType.CHECKERS,
     displayName: 'registry.checkers.name',
