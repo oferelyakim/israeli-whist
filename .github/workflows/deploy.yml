@@ -36,3 +36,12 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           channelId: live
           projectId: whist---elyakim
+          # Pinned deliberately. The default is `latest`, and firebase-tools
+          # 15.34.x started probing the Service Usage API to check whether
+          # Hosting is enabled — a permission the deploy service account does
+          # not hold — so the v1.6.0 deploy failed with a 403 on
+          # `serviceusage.services.get` while 15.30.2 had worked days earlier.
+          # Nothing in this repo or in IAM had changed; the CLI moved.
+          # To unpin, first grant the service account
+          # roles/serviceusage.serviceUsageConsumer on the GCP project.
+          firebaseToolsVersion: 15.30.2
