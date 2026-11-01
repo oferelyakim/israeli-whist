@@ -18,6 +18,7 @@ export enum GameType {
   GEM_BLOCKS = 'GEM_BLOCKS',
   PIPS = 'PIPS',
   STRANDS = 'STRANDS',
+  WORDLE = 'WORDLE',
 }
 
 export enum PlayerType {

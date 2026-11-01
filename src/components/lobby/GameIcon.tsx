@@ -151,6 +151,18 @@ function marks(game: GameType) {
         </>
       );
 
+    case GameType.WORDLE:
+      return (
+        <>
+          <rect x="2.5" y="4" width="5.5" height="6" rx="1.2" fill="currentColor" stroke="none" />
+          <rect x="9.25" y="4" width="5.5" height="6" rx="1.2" />
+          <rect x="16" y="4" width="5.5" height="6" rx="1.2" />
+          <rect x="2.5" y="14" width="5.5" height="6" rx="1.2" />
+          <rect x="9.25" y="14" width="5.5" height="6" rx="1.2" fill="currentColor" stroke="none" />
+          <rect x="16" y="14" width="5.5" height="6" rx="1.2" />
+        </>
+      );
+
     default:
       // Any game added to the registry without an icon still gets a tile.
       return (

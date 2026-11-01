@@ -30,6 +30,7 @@ const SOLO_GAMES: ReadonlySet<GameType> = new Set([
   GameType.GEM_BLOCKS,
   GameType.PIPS,
   GameType.STRANDS,
+  GameType.WORDLE,
 ]);
 
 const GAME_I18N: Record<GameType, { name: TranslationKey; description: TranslationKey; rules: TranslationKey[] }> = {
@@ -117,6 +118,11 @@ const GAME_I18N: Record<GameType, { name: TranslationKey; description: Translati
     name: 'registry.strands.name',
     description: 'registry.strands.description',
     rules: ['registry.strands.rule1', 'registry.strands.rule2', 'registry.strands.rule3', 'registry.strands.rule4', 'registry.strands.rule5'],
+  },
+  [GameType.WORDLE]: {
+    name: 'registry.wordle.name',
+    description: 'registry.wordle.description',
+    rules: ['registry.wordle.rule1', 'registry.wordle.rule2', 'registry.wordle.rule3', 'registry.wordle.rule4', 'registry.wordle.rule5'],
   },
 };
 

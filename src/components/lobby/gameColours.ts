@@ -21,6 +21,7 @@ const COLOURS: Partial<Record<GameType, string>> = {
   [GameType.GEM_BLOCKS]: '79 200 234',
   [GameType.PIPS]: '138 127 232',
   [GameType.STRANDS]: '242 196 61',
+  [GameType.WORDLE]: '106 170 100',
 };
 
 /** Falls back to the muted text colour for a game with no entry. */
