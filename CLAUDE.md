@@ -732,14 +732,41 @@ tracing its own words.
   --log-level=warning && node /tmp/test-strands.mjs
 ```
 
+### The game menu
+
+Games are picked from a grid of equal-sized tiles: an icon over the game's
+name. Two things to know.
+
+**Icons are inline SVG, in `src/components/lobby/GameIcon.tsx` — not emoji.**
+Same reason the Mahjong confetti is not emoji: code points without emoji-font
+coverage fall back to blank boxes on common platforms. They draw with
+`currentColor`, so the selected state recolours them with no second asset, and
+they share one 24x24 viewBox and stroke weight so the tiles line up. A game
+without a case in `marks()` still gets a generic tile rather than an empty one.
+
+The selector is a **wrapping flex row, not a grid**: the number of games does
+not divide evenly into the columns, and a grid stranded the last one or two
+tiles against the left edge instead of centring them under the rest. The label
+is clamped to two lines so a long name cannot make its tile taller than the
+others.
+
+**The menu opens on the last game actually PLAYED** (`whist-last-game`).
+Written by the `startGame` wrapper that every launch goes through, and by
+`handleCreateRoom` — not by `handleGameSelect`, so browsing the tiles does not
+change where the menu opens next time. `loadLastGame` checks the stored id
+against `GAME_REGISTRY` rather than trusting it: games do get pulled from the
+menu (Woodoku and Escape Room both have been), and a stale id would otherwise
+crash the header on mount.
+
 ### Adding a new game (registry + MainMenu wiring)
 
-When adding any new game (not just an archetype here), there are **four** wiring points — miss the fourth and the menu silently launches Yaniv:
+When adding any new game (not just an archetype here), there are **five** wiring points — miss the fourth and the menu silently launches Yaniv:
 
 1. `src/types/game-common.ts` — add the `GameType` enum entry.
 2. `src/games/registry.ts` — add the `GAME_REGISTRY[...]` entry with lazy-loaded screens.
 3. `src/components/lobby/MainMenu.tsx` `GAME_I18N` — required by the strict `Record<GameType, ...>` type, build fails without it.
-4. `src/components/lobby/MainMenu.tsx` `SOLO_GAMES` — **add a solo game to this set.** `handleSinglePlayer` ends with a bare `else` that dispatches Yaniv settings, so a solo game missing from the set silently launches Yaniv. The same set drives the two guards that hide the multiplayer controls, so one entry covers all three. A game WITH multiplayer instead needs its own branch in `handleSinglePlayer` alongside the others.
+4. `src/components/lobby/GameIcon.tsx` — add a `case` to `marks()`. Without one the game falls back to a generic tile, which is not a build error, so it is easy to miss.
+5. `src/components/lobby/MainMenu.tsx` `SOLO_GAMES` — **add a solo game to this set.** `handleSinglePlayer` ends with a bare `else` that dispatches Yaniv settings, so a solo game missing from the set silently launches Yaniv. The same set drives the two guards that hide the multiplayer controls, so one entry covers all three. A game WITH multiplayer instead needs its own branch in `handleSinglePlayer` alongside the others.
 
 ### Adding a new archetype
 
