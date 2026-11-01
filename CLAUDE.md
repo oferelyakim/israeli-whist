@@ -1,13 +1,13 @@
 # Israeli-Whist (multi-game card app)
 
-Vite + React 19 + TypeScript card-game suite. Fifteen game modes share a common
+Vite + React 19 + TypeScript card-game suite. Sixteen game modes share a common
 lobby/scoring/multiplayer infrastructure: WhistAchim, Yaniv, Quartets,
 Solitaire, Shithead, Israeli Rummy (Rummikub-style), Backgammon, Checkers,
 Mahjong Solitaire (solo tile matching), Word Wonders (solo word crossword),
 Gem Blocks (solo 9x9 block puzzle), Pips (solo domino-fitting puzzle),
-Strands (solo themed word search), Woodoku (solo block puzzle), and Escape
-Room (solo timed puzzle stages). Woodoku and Escape Room are currently hidden
-from the menu.
+Strands (solo themed word search), Wordle (solo five-letter guessing),
+Woodoku (solo block puzzle), and Escape Room (solo timed puzzle stages).
+Woodoku and Escape Room are currently hidden from the menu.
 Multiplayer is built on Firebase Realtime DB; bots run client-side.
 PWA via vite-plugin-pwa.
 
@@ -752,6 +752,89 @@ tracing its own words.
   --log-level=warning && node /tmp/test-strands.mjs
 ```
 
+## Wordle (added 2026-11-01)
+
+Solo word game at `src/games/wordle/`: six tries at a five-letter word, in
+English or Hebrew, as a Daily (one word a day, the same on every device) or
+Endless. Solo only; the multiplayer screen is a stub.
+
+### The repeated-letter rule
+
+`markGuess` claims greens FIRST and removes the letters they use from the pool;
+only then does each remaining position look for a yellow. Marking left to right
+in one pass instead shows a yellow for a letter whose only copy is already green
+somewhere else. This is the classic bug in every Wordle clone and it is
+invisible until a player hits it.
+
+The test carries the worked reasoning beside each case, because an expectation
+nobody can re-derive is worth nothing: every one of them was wrong on the first
+pass and the CODE was right. `AAAAA` against `ABABA` is the sharpest — five A
+guessed, three in the answer, so exactly three light up.
+
+### Guesses and answers are different lists, on purpose
+
+| | English | Hebrew |
+|---|---|---|
+| answers | 1,900ish, common tier minus proper nouns | **303, curated** |
+| guesses | **12,578** | ~10,700 |
+
+A player must be able to GUESS an obscure word without being told it is not a
+word, but must never be ASKED for one. So:
+
+- **English guesses** come from `data/guesses-en.ts`, generated offline from the
+  `word-list` npm package (MIT) and committed — not part of `npm run build`.
+  Deliberately NOT frequency-filtered; the filtered list alone offers 3,220 of
+  them against this list's 12,578. It is a dynamic import, so it is its own
+  31 KB gz chunk and only English players ever fetch it.
+- **English answers** are the Word Wonders common tier minus
+  `data/not-answers-en.ts`. Names and brands clear a frequency bar easily: a
+  sample of 120 dailies served CONGO, COLIN, HENRY, MARIA, HOMER, DIANE, FEDEX
+  and WELSH, about one unguessable word a fortnight. They stay valid guesses.
+- **Hebrew answers are hand-picked** (`data/answers-he.ts`). Hspell is a
+  spell-checker lexicon holding every inflected form by design, so its common
+  tier is full of possessives, prefixed forms, conjugated verbs and proper
+  nouns — the daily really did serve a first name before this file existed.
+  **Morphology heuristics cannot fix it**: Hebrew `ה` is both the possessive
+  suffix AND the ordinary feminine ending, so any rule strong enough to drop
+  אהבתה also drops אהובה. Measured both ways: the conservative rules still let
+  verb inflections and place names through, the aggressive ones deleted good
+  nouns. Every curated word was checked against the dictionary before being
+  committed, so each is real AND an accepted guess.
+
+An answer that is not an accepted guess cannot be typed in, which makes the
+board unwinnable — the test checks that directly, in both languages.
+
+### The daily walks a shuffled list, it does not hash the day
+
+Hashing the day straight to an index repeated words inside a month: with a few
+hundred answers, collisions are common. The list is shuffled once with a fixed
+per-language seed and the day indexes into that, so no word comes round again
+until every one has been used, while consecutive days stay unrelated.
+
+`dayNumber` uses the device's OWN calendar, not UTC, so the word turns over at
+the player's midnight rather than at 2am. Rounding absorbs daylight saving.
+
+Only the Daily touches the streak. Endless never does, and `recordDaily`
+refuses to count the same day twice.
+
+### Hebrew specifics
+
+The grid holds the non-final form of every letter, as Word Wonders and Strands
+do, and the keyboard offers exactly the 22 letters — offering a final form
+would let a player type a letter the answer can never contain. The grid and
+keyboard are `dir="rtl"` so the first letter sits on the right; the answer is
+read back through `toDisplay`, which restores the final letter.
+
+**Regression test:** `scripts/test-wordle.mts` covers the marking rules with
+their reasoning, the keyboard only ever improving, a board played and lost
+through the real reducer, the daily being stable all day and different
+tomorrow, and both real word lists.
+```
+./node_modules/.bin/esbuild --bundle scripts/test-wordle.mts \
+  --platform=node --format=esm --outfile=/tmp/test-wordle.mjs \
+  --log-level=warning && node /tmp/test-wordle.mjs
+```
+
 ### The game menu
 
 Games are picked from a grid of equal-sized tiles: an icon over the game's
@@ -827,5 +910,6 @@ Archetype `hint()` and `validate()` return strings like `'escape.padlock.clue.di
 - Don't ship Word Wonders word lists without the frequency filter, and don't add the raw Hspell lexicon as a dependency (AGPL) — see "Word Wonders" above.
 - Don't replace the Mahjong pair-assignment dealer with a random shuffle — it would deal unfinishable boards (see "Mahjong Solitaire" above).
 - Don't grow the Pips board by carving a shape and hoping it tiles, and don't add a clue kind whose `bad` verdict can later come good — the solver prunes on that being permanent (see "Pips" above).
+- Don't source Wordle ANSWERS from a spell-checker lexicon or a raw frequency list — Hebrew needs the curated file and English needs the proper-noun stop-list, and neither can be replaced by a morphology rule (see "Wordle" above).
 - Don't try to drive the Strands packer's failure rate to zero with a bigger node budget — retrying with a different subset of the theme's words is the mechanism, and the budget buys almost nothing (see "Strands" above).
 - Don't naively append in the bot layoff loop. `canLayOff` is true if EITHER append OR prepend yields a valid meld (low-end run extensions like 10♣→[J♣,Q♣,K♣] only work as prepend). Always test both `[...meld.cards, card]` and `[card, ...meld.cards]` against `isValidMeld` and pick the valid arrangement — appending blindly produced positionally-invalid runs and `selfValidateCommit` then reverted the entire turn (the "bots only play sets, never lay off" symptom). Regression: `scripts/test-bot-layoff.mts`.

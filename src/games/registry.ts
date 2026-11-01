@@ -236,6 +236,23 @@ export const GAME_REGISTRY: Partial<Record<GameType, GameConfig>> = {
     GameScreen: lazy(() => import('./strands/components/StrandsScreen')),
     MultiplayerScreen: lazy(() => import('./strands/components/StrandsMultiplayerScreen')),
   },
+  [GameType.WORDLE]: {
+    type: GameType.WORDLE,
+    displayName: 'Wordle',
+    minPlayers: 1,
+    maxPlayers: 1,
+    defaultPlayers: 1,
+    description: 'Six tries to find the five-letter word',
+    rulesSnippet: [
+      'Find the five-letter word in six tries',
+      'Green is the right letter in the right place',
+      'Yellow is the right letter somewhere else',
+      'One word a day, or play Endless as much as you like',
+      'Play in English or Hebrew',
+    ],
+    GameScreen: lazy(() => import('./wordle/components/WordleScreen')),
+    MultiplayerScreen: lazy(() => import('./wordle/components/WordleMultiplayerScreen')),
+  },
   [GameType.CHECKERS]: {
     type: GameType.CHECKERS,
     displayName: 'registry.checkers.name',
