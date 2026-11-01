@@ -665,6 +665,29 @@ export const en = {
   'registry.wordwonders.rule3': 'Extra words you find count as bonus words',
   'registry.wordwonders.rule4': 'Stuck? A hint uncovers one letter',
   'registry.wordwonders.rule5': 'Play in English or Hebrew',
+
+  // Gem Blocks
+  'gemblocks.score': 'Score {n}',
+  'gemblocks.newGame': 'New game',
+  'gemblocks.pieceSlot': 'Shape {n}',
+  'gemblocks.won': 'All Gems Collected!',
+  'gemblocks.wonMessage': 'You cleared all {n} gems off the board.',
+  'gemblocks.statMoves': 'Moves',
+  'gemblocks.statTime': 'Time',
+  'gemblocks.statScore': 'Score',
+  'gemblocks.best': 'Best: {moves} moves in {time}',
+  'gemblocks.playAgain': 'Play Again',
+  'gemblocks.gameOver': 'No Room Left',
+  'gemblocks.gameOverMessage': 'You collected {got} of {goal} gems.',
+  'gemblocks.tryAgain': 'Try Again',
+  'gemblocks.noMultiplayer': 'Gem Blocks is a single-player game.',
+  'registry.gemblocks.name': 'Gem Blocks',
+  'registry.gemblocks.description': 'Drop blocks, clear lines, collect 14 gems',
+  'registry.gemblocks.rule1': 'Drag the three shapes onto the 9\u00d79 board',
+  'registry.gemblocks.rule2': 'Fill a row, a column or a 3\u00d73 box to clear it',
+  'registry.gemblocks.rule3': 'Gems in whatever you clear are collected',
+  'registry.gemblocks.rule4': 'Some blocks arrive carrying a gem of their own',
+  'registry.gemblocks.rule5': 'Collect 14 gems before you run out of room',
 } as const;
 
 // ─── Hebrew ────────────────────────────────────────────────────────────────
@@ -1329,6 +1352,29 @@ export const he: Record<TranslationKey, string> = {
   'registry.wordwonders.rule3': 'מילים נוספות שתמצאו נחשבות מילות בונוס',
   'registry.wordwonders.rule4': 'נתקעתם? רמז חושף אות אחת',
   'registry.wordwonders.rule5': 'אפשר לשחק באנגלית או בעברית',
+
+  // Gem Blocks
+  'gemblocks.score': 'ניקוד {n}',
+  'gemblocks.newGame': 'משחק חדש',
+  'gemblocks.pieceSlot': 'צורה {n}',
+  'gemblocks.won': 'כל היהלומים נאספו!',
+  'gemblocks.wonMessage': 'ניקיתם את כל {n} היהלומים מהלוח.',
+  'gemblocks.statMoves': 'מהלכים',
+  'gemblocks.statTime': 'זמן',
+  'gemblocks.statScore': 'ניקוד',
+  'gemblocks.best': 'שיא: {moves} מהלכים ב-{time}',
+  'gemblocks.playAgain': 'שחק שוב',
+  'gemblocks.gameOver': 'נגמר המקום',
+  'gemblocks.gameOverMessage': 'אספתם {got} מתוך {goal} יהלומים.',
+  'gemblocks.tryAgain': 'נסו שוב',
+  'gemblocks.noMultiplayer': 'קוביות יהלום הוא משחק לשחקן יחיד.',
+  'registry.gemblocks.name': 'קוביות יהלום',
+  'registry.gemblocks.description': 'שבצו קוביות, נקו שורות ואספו 14 יהלומים',
+  'registry.gemblocks.rule1': 'גררו את שלוש הצורות ללוח 9\u00d79',
+  'registry.gemblocks.rule2': 'מלאו שורה, עמודה או ריבוע 3\u00d73 כדי לנקות אותם',
+  'registry.gemblocks.rule3': 'יהלומים שנמצאים במה שניקיתם נאספים',
+  'registry.gemblocks.rule4': 'חלק מהקוביות מגיעות עם יהלום משלהן',
+  'registry.gemblocks.rule5': 'אספו 14 יהלומים לפני שייגמר המקום',
 };
 
 export const translations: Record<Language, Record<TranslationKey, string>> = {

@@ -1,11 +1,12 @@
 # Israeli-Whist (multi-game card app)
 
-Vite + React 19 + TypeScript card-game suite. Twelve game modes share a common
+Vite + React 19 + TypeScript card-game suite. Thirteen game modes share a common
 lobby/scoring/multiplayer infrastructure: WhistAchim, Yaniv, Quartets,
 Solitaire, Shithead, Israeli Rummy (Rummikub-style), Backgammon, Checkers,
 Mahjong Solitaire (solo tile matching), Word Wonders (solo word crossword),
-Woodoku (solo block puzzle), and Escape Room (solo timed puzzle stages).
-Woodoku and Escape Room are currently hidden from the menu.
+Gem Blocks (solo 9x9 block puzzle), Woodoku (solo block puzzle), and Escape
+Room (solo timed puzzle stages). Woodoku and Escape Room are currently hidden
+from the menu.
 Multiplayer is built on Firebase Realtime DB; bots run client-side.
 PWA via vite-plugin-pwa.
 
@@ -457,6 +458,72 @@ wheel, and plays 25 boards per language to completion through the real reducer.
   --log-level=warning && node /tmp/test-ww.mjs
 ```
 
+## Gem Blocks (added 2026-11-01)
+
+Solo block puzzle at `src/games/gemblocks/`: drop three offered shapes onto a
+9x9 board, clear full rows, columns and 3x3 boxes, and collect 14 gems. Solo
+only; the multiplayer screen is a stub.
+
+Shares a silhouette with the hidden `woodoku/` game (9x9, three shapes, same
+clearing rules) but is a separate reducer and folder: the gem layer, the goal
+and the shape catalogue all differ, and Woodoku is unfinished WIP. Don't merge
+them without deciding which ruleset survives.
+
+### Gems
+
+Gems rest on squares, filled or not, and are collected when a clear sweeps
+their square. They arrive two ways: four are scattered on the opening board
+(`seedBoardGems`), and some offered shapes carry one (`OfferedPiece.gemIndex`),
+which lands on the board as the shape is placed. A shape that both delivers a
+gem AND completes the line collects it in the same move, which is how the
+reference game behaves.
+
+**Supply is gated on what the player still needs, never on gems already lying
+on the board.** A gem can be stranded somewhere that never clears; gating on
+board gems would then starve the supply and make 14 unreachable. `makeOffer`
+keeps handing gems out until `gemsCollected + trayGems >= goal`, capped at two
+per tray so they trickle. The regression test covers exactly this.
+
+### Shape weighting is a difficulty knob, not decoration
+
+`pickWeightedPiece` biases the catalogue toward mid-size shapes
+(`WEIGHT_BY_SIZE` in `engine/pieces.ts`). Sampling the 33 shapes uniformly deals
+too many five-cell corners, the board silts up and the goal becomes unfair: the
+greedy bot in the regression test won only 28/40 games. With the weighting it
+wins 34/40, which is the intended difficulty. Re-check that number if the
+catalogue changes.
+
+The catalogue has no 2x2 square, no plus and no 3x3 block — it is the shape set
+from the reference game: straight lines 1-5, right-angle corners (2+2, 2+3,
+3+3), T's and S/Z's. Shapes never rotate, so every orientation is listed.
+
+### Pointer dragging, and two alignment traps
+
+Dragging uses raw pointer events (repo convention). A press that moves past
+`TAP_SLOP` becomes a drag; one that doesn't just selects the shape, so the board
+can be tapped instead — that is also the keyboard/mouse path.
+
+Two bugs worth not reintroducing, both found by measuring the rendered DOM:
+
+- **The board's padding belongs to `.gb-board-frame`, not `.gb-board`.** `cellAt`
+  maps a pointer position to a square using the grid's own rect; padding on the
+  grid shifted every hit test by 6px.
+- **The drag ghost snaps to the landing square** (`dragging.snap`), it does not
+  follow the pointer over the board. A free-following ghost drifts up to half a
+  cell away from the preview it is supposed to be showing, because the preview
+  snaps and the pointer doesn't. Off the board it falls back to following the
+  pointer, offset by the grabbed cell rather than the shape's centre.
+
+**Regression test:** `scripts/test-gemblocks.mts` checks the shape catalogue is
+connected and normalised, checks rows/columns/boxes clear and collect their
+gems, checks the gem supply cannot stall, and plays 40 full games with a greedy
+bot to confirm the goal is actually reachable.
+```
+./node_modules/.bin/esbuild --bundle scripts/test-gemblocks.mts \
+  --platform=node --format=esm --outfile=/tmp/test-gb.mjs \
+  --log-level=warning && node /tmp/test-gb.mjs
+```
+
 ### Adding a new game (registry + MainMenu wiring)
 
 When adding any new game (not just an archetype here), there are **four** wiring points — miss the fourth and the menu silently launches Yaniv:
@@ -493,6 +560,7 @@ Archetype `hint()` and `validate()` return strings like `'escape.padlock.clue.di
 - Don't classify "new" Israeli Rummy melds by card value — use ID-based identification (see "First meld" above).
 - Don't reintroduce a rotation/landscape overlay — the portrait + wrapping-rows layout is the target.
 - Don't call `screen.orientation.lock(...)` — it requires fullscreen and silently rejects on most devices.
+- Don't sample the Gem Blocks shapes uniformly — the weighting is what keeps the 14-gem goal fair (see "Gem Blocks" above).
 - Don't ship Word Wonders word lists without the frequency filter, and don't add the raw Hspell lexicon as a dependency (AGPL) — see "Word Wonders" above.
 - Don't replace the Mahjong pair-assignment dealer with a random shuffle — it would deal unfinishable boards (see "Mahjong Solitaire" above).
 - Don't naively append in the bot layoff loop. `canLayOff` is true if EITHER append OR prepend yields a valid meld (low-end run extensions like 10♣→[J♣,Q♣,K♣] only work as prepend). Always test both `[...meld.cards, card]` and `[card, ...meld.cards]` against `isValidMeld` and pick the valid arrangement — appending blindly produced positionally-invalid runs and `selfValidateCommit` then reverted the entire turn (the "bots only play sets, never lay off" symptom). Regression: `scripts/test-bot-layoff.mts`.
