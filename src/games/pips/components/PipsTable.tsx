@@ -9,6 +9,7 @@ import type {
   PipsRegion,
 } from '../types';
 import {
+  REGION_COLOURS,
   canPlace,
   cellValues,
   constraintLabel,
@@ -39,14 +40,22 @@ const BADGE_OVERHANG = 18;
 const TRAY_HALF = 30;
 const TAP_SLOP = 8;
 
-/** One colour per region; regions index into this and keep it across renders. */
+/**
+ * One colour per region. The generator colours regions so that no two touching
+ * ones share an index, which only works if this holds REGION_COLOURS entries.
+ */
 const PALETTE = [
-  '#9b6bd6', '#e0506b', '#3f9aa8', '#e08a3c', '#2f6fb5',
-  '#8a9a2b', '#c0399a', '#2f9e63', '#d4a017', '#6b7a9c',
+  '#9b6bd6', '#e0506b', '#3f9aa8', '#e08a3c', '#2f6fb5', '#8a9a2b',
+  '#c0399a', '#2f9e63', '#d4a017', '#6b7a9c', '#8c6d4f', '#4d5fd1',
 ];
 
 function colourOf(region: PipsRegion): string {
   return PALETTE[region.colour % PALETTE.length];
+}
+
+if (PALETTE.length !== REGION_COLOURS) {
+  // A short palette silently makes two touching regions the same colour.
+  console.error(`Pips palette has ${PALETTE.length} colours, expected ${REGION_COLOURS}`);
 }
 
 /** Dot positions on a 3x3 grid, read left-to-right, top-to-bottom. */

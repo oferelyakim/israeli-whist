@@ -74,6 +74,7 @@ export interface UseStrandsGameReturn {
   startGame: (settings: StrandsSettings, lang: StrandsLang) => void;
   traceStart: (cell: number) => void;
   traceEnter: (cell: number) => void;
+  traceClear: () => void;
   traceEnd: () => void;
   clearResult: () => void;
   hint: () => void;
@@ -183,6 +184,7 @@ export function useStrandsGame(): UseStrandsGameReturn {
     startGame,
     traceStart: useCallback((cell: number) => dispatch({ type: 'TRACE_START', cell }), [dispatch]),
     traceEnter: useCallback((cell: number) => dispatch({ type: 'TRACE_ENTER', cell }), [dispatch]),
+    traceClear: useCallback(() => dispatch({ type: 'TRACE_CLEAR' }), [dispatch]),
     traceEnd: useCallback(() => {
       const dict = dictRef.current;
       dispatch({

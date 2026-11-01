@@ -642,6 +642,27 @@ and ambiguous boards second.
 almost never strong enough to pin the answer, so the ladder passes it over.
 Don't "fix" that by forcing it in — an unsound clue set is worse than a dull one.
 
+### Regions are coloured by graph colouring, not by index
+
+A region is built connected (each cell is added next to one already in it), so
+a multi-cell region is always one blob. What went wrong was the COLOUR:
+numbering regions 0,1,2,... worked until a hard board had twelve regions
+against a ten-colour palette, and the extras wrapped back round. Two
+same-coloured regions that happened to touch then read as one scattered
+region — which is exactly the sort of thing a player tries to fill with a
+single domino. Reported from play, 2026-11-01; it hit 15 of 120 hard boards.
+
+`assignColours` greedily colours the region-adjacency graph (diagonal contact
+counts, since two blobs meeting at a corner read as one shape), most-constrained
+region first, and among the colours a region may take it picks the one used
+LEAST on this board so far. Taking the lowest free index is correct but drab —
+it crowded a nine-region board into three tints; spreading gives nine or ten.
+
+`PALETTE` in the renderer must hold exactly `REGION_COLOURS` entries; a short
+palette silently reintroduces the bug. The regression test checks both that
+every multi-cell region is connected and that no two touching regions share a
+colour.
+
 ### Gotcha: badges hang off the board
 
 A clue badge is pinned to the outer corner of its region, so badges on the right
@@ -733,6 +754,19 @@ The test asserts no final letter ever reaches a Hebrew grid.
 Bonus words are checked against the **Word Wonders dictionary**
 (`loadDictionary`), which is already chunked per language. A player who never
 opens a Hebrew board never downloads Hebrew.
+
+### Letters can be tapped as well as dragged through
+
+`tapOutcome(trace, cell)` in `engine/game-reducer.ts` decides what a press
+means, and it lives in the engine rather than the component because it is the
+rule, not the rendering: first tap starts a word, a tap on a touching letter
+adds it, a tap on the last letter again sends the word, a tap on the only
+letter cancels, and a tap anywhere else starts again from there.
+
+The board defers the `submit` outcome to the pointer RELEASE, so a drag that
+happens to begin on the last letter is still a drag. A press that moves past
+`TAP_SLOP` is a drag and always submits on release; one that does not leaves
+the word selected, waiting for the next tap.
 
 ### Gotcha: how close the letter discs sit
 

@@ -15,10 +15,12 @@
  */
 import {
   MAX_PIP,
+  REGION_COLOURS,
   cellValues,
   isSolved,
   parseKey,
   regionStatus,
+  regionsTouch,
 } from '../src/games/pips/engine/board';
 import { DIFFICULTY_SPEC, generatePuzzle } from '../src/games/pips/engine/generate';
 import { solve } from '../src/games/pips/engine/solver';
@@ -146,6 +148,41 @@ console.log('\nClues');
 
   check('the generator’s own answer satisfies every clue', satisfied === total, `${satisfied}/${total}`);
   check('the search always finishes inside its budget', proven === total, `${proven}/${total}`);
+  // Two regions that touch must never share a colour. Numbering them in order
+  // was fine until a hard board had twelve regions against a ten-colour
+  // palette: the extras wrapped round, and a pair that happened to touch read
+  // as one scattered region, which is what a player tries to fill with one
+  // domino.
+  let clashes = 0;
+  let disconnected = 0;
+  for (const difficulty of DIFFICULTIES) {
+    for (let i = 0; i < PER_DIFFICULTY; i++) {
+      const puzzle = generatePuzzle(i * 7919 + 31, difficulty);
+      for (let a = 0; a < puzzle.regions.length; a++) {
+        const region = puzzle.regions[a];
+        // Every multi-cell region has to be one connected blob, not scattered.
+        if (region.cells.length > 1) {
+          const own = new Set(region.cells);
+          const seen = new Set([region.cells[0]]);
+          const stack = [region.cells[0]];
+          while (stack.length > 0) {
+            const cell = stack.pop() as string;
+            const [r, c] = parseKey(cell);
+            for (const near of [`${r},${c + 1}`, `${r},${c - 1}`, `${r + 1},${c}`, `${r - 1},${c}`]) {
+              if (own.has(near) && !seen.has(near)) { seen.add(near); stack.push(near); }
+            }
+          }
+          if (seen.size !== region.cells.length) disconnected++;
+        }
+        for (let b = a + 1; b < puzzle.regions.length; b++) {
+          if (puzzle.regions[a].colour % REGION_COLOURS !== puzzle.regions[b].colour % REGION_COLOURS) continue;
+          if (regionsTouch(puzzle.regions[a], puzzle.regions[b])) clashes++;
+        }
+      }
+    }
+  }
+  check('every multi-cell region is one connected blob', disconnected === 0, `${disconnected}`);
+  check('two regions that touch never share a colour', clashes === 0, `${clashes}`);
   check('every board has exactly one answer', unique === total, `${unique}/${total}`);
   check('no clue kind is NONE once the board is built', !('NONE' in kinds));
   console.log(`      (clue mix: ${Object.entries(kinds).map(([k, v]) => `${k}=${v}`).join(' ')})`);
