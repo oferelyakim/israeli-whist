@@ -202,6 +202,23 @@ export const GAME_REGISTRY: Partial<Record<GameType, GameConfig>> = {
     GameScreen: lazy(() => import('./gemblocks/components/GemBlocksScreen')),
     MultiplayerScreen: lazy(() => import('./gemblocks/components/GemBlocksMultiplayerScreen')),
   },
+  [GameType.PIPS]: {
+    type: GameType.PIPS,
+    displayName: 'Pips',
+    minPlayers: 1,
+    maxPlayers: 1,
+    defaultPlayers: 1,
+    description: 'Fit every domino so the clues add up',
+    rulesSnippet: [
+      'Place every domino on the board',
+      'Each coloured area sets a condition on its pips',
+      'A number is the total; > and < are limits',
+      '= wants matching pips, \u2260 wants all different',
+      'Tap a domino to turn it, drag it to place it',
+    ],
+    GameScreen: lazy(() => import('./pips/components/PipsScreen')),
+    MultiplayerScreen: lazy(() => import('./pips/components/PipsMultiplayerScreen')),
+  },
   [GameType.CHECKERS]: {
     type: GameType.CHECKERS,
     displayName: 'registry.checkers.name',
