@@ -185,6 +185,23 @@ export const GAME_REGISTRY: Partial<Record<GameType, GameConfig>> = {
     GameScreen: lazy(() => import('./wordwonders/components/WordWondersScreen')),
     MultiplayerScreen: lazy(() => import('./wordwonders/components/WordWondersMultiplayerScreen')),
   },
+  [GameType.GEM_BLOCKS]: {
+    type: GameType.GEM_BLOCKS,
+    displayName: 'Gem Blocks',
+    minPlayers: 1,
+    maxPlayers: 1,
+    defaultPlayers: 1,
+    description: 'Drop blocks, clear lines, collect 14 gems',
+    rulesSnippet: [
+      'Drag the three shapes onto the 9\u00d79 board',
+      'Fill a row, a column or a 3\u00d73 box to clear it',
+      'Gems in whatever you clear are collected',
+      'Some blocks arrive carrying a gem of their own',
+      'Collect 14 gems before you run out of room',
+    ],
+    GameScreen: lazy(() => import('./gemblocks/components/GemBlocksScreen')),
+    MultiplayerScreen: lazy(() => import('./gemblocks/components/GemBlocksMultiplayerScreen')),
+  },
   [GameType.CHECKERS]: {
     type: GameType.CHECKERS,
     displayName: 'registry.checkers.name',
