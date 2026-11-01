@@ -124,21 +124,27 @@ Requires `FIREBASE_SERVICE_ACCOUNT` secret in GitHub repo settings.
 GitHub: https://github.com/oferelyakim/israeli-whist
 Live: https://whist---elyakim.web.app
 
-**When the deploy fails but the build passed**, the problem is the
-`FIREBASE_SERVICE_ACCOUNT` credential, not the code. The giveaway is a 403 from
-Google in the "Deploy to Firebase Hosting" step while every earlier step is
-green, e.g. `Permission denied to get service [firebasehosting.googleapis.com]`
-naming `serviceusage.services.get`. This happened on 2026-11-01 with v1.6.0
-after v1.5.0 had deployed fine, so the credential can rot without the workflow
-changing. Check, in Google Cloud IAM for project `whist---elyakim`: the service
-account in the secret still exists with a valid key; it holds **Firebase
-Hosting Admin** (`roles/firebasehosting.admin`) and **Service Usage Consumer**
-(`roles/serviceusage.serviceUsageConsumer`, which carries the permission the
-error names); and `firebasehosting.googleapis.com` is enabled. Retry from the
-Actions tab via **Run workflow** (the `workflow_dispatch` trigger) rather than
-pushing a commit. Note the GitHub integration Claude uses here cannot re-run
-workflows (403 `Resource not accessible by integration`), so a retry has to
-come from you or from a push.
+**`firebaseToolsVersion` in `deploy.yml` is pinned on purpose.** The action
+defaults to `latest`, which means the deploy CLI can change without anything in
+this repo changing. On 2026-11-01 it did: 15.30.2 had deployed v1.5.0 fine days
+earlier, 15.34.2 started probing the Service Usage API to check whether Hosting
+is enabled, and the deploy service account does not hold
+`serviceusage.services.get` — so v1.6.0 failed with a 403 while the build was
+green. The Hosting permissions themselves were fine; the CLI's own debug log
+shows `firebase.projects.get` and `firebasehosting.sites.update` both coming
+back granted, and only the serviceusage call returning 403.
+
+Don't "fix" a failing deploy by bumping that pin. To move off it, first grant
+the service account `roles/serviceusage.serviceUsageConsumer` on the
+`whist---elyakim` project, then unpin.
+
+**When a deploy fails but the build passed**, suspect the deploy step's
+environment rather than the code: compare the `CLI Version:` line in the failing
+run's log against the last green one. The workflow also has a
+`workflow_dispatch` trigger, so a deploy can be retried from the Actions tab
+without inventing a commit. Note the GitHub integration Claude uses here cannot
+re-run workflows (403 `Resource not accessible by integration`), so a retry has
+to come from you or from a push.
 
 **Firebase config** (`src/multiplayer/firebase-config.ts`): the production Firebase credentials are hardcoded as `PROD_CONFIG` fallbacks in `getFirebaseConfig()`. `.env` env-vars override them for local dev but are NOT required for the build — the deployed app always has a working config. Firebase client config is intentionally public; security is enforced by Realtime Database rules (`auth != null`), not by hiding these values.
 
