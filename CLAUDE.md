@@ -691,16 +691,22 @@ languages. Don't "fix" the failure rate by raising the node cap.
 
 ### Themes are pools, not boards
 
-`data/themes-{en,he}.ts` hold a clue, a spangram and 12-23 candidate words each.
+`data/themes-{en,he}.ts` hold a clue, a spangram and 11-23 candidate words each.
 The level builder picks whichever subset's lengths total the free cells exactly
 (capped at 9 words for English, 12 for Hebrew), so one theme yields many
-different boards and a pool only has to be generous, not exact. 24 English
-themes, 18 Hebrew.
+different boards and a pool only has to be generous, not exact. **44 English
+themes, 36 Hebrew.** Both files are plain literal text, Hebrew included — they
+are meant to be edited by hand, so don't convert them to `\uXXXX` escapes.
 
-A theme fails if its pool cannot reach the target sum — which is how the two
-original Hebrew duds were caught: `body` lost five two-letter words to the
-minimum-length filter and totalled 36 against a target of 41. The regression
-test builds every theme, so this cannot ship unnoticed.
+Two ways a pool can be wrong, both caught by the regression test rather than by
+reading it:
+
+- **It cannot reach the target sum.** `body` lost five two-letter words to the
+  minimum-length filter and totalled 36 against a target of 41.
+- **A "word" contains something that is not a letter.** A grid cell holds one
+  letter, so a geresh, an apostrophe or a stray space is written into the board
+  as if it were one — `מג׳דרה` did exactly that. The test checks every pool word
+  against its language's alphabet.
 
 ### Hebrew: author the display form, derive the grid form
 
@@ -740,15 +746,23 @@ name. Two things to know.
 **Icons are inline SVG, in `src/components/lobby/GameIcon.tsx` — not emoji.**
 Same reason the Mahjong confetti is not emoji: code points without emoji-font
 coverage fall back to blank boxes on common platforms. They draw with
-`currentColor`, so the selected state recolours them with no second asset, and
-they share one 24x24 viewBox and stroke weight so the tiles line up. A game
-without a case in `marks()` still gets a generic tile rather than an empty one.
+`currentColor` and share one 24x24 viewBox and stroke weight, so the tiles line
+up. A game without a case in `marks()` still gets a generic tile rather than an
+empty one.
+
+Each game also has a colour, kept in `gameColours.ts` as **space-separated RGB
+rather than hex**: the tile sets it as `--game-rgb`, and one value then drives both the
+icon (`rgb(var(--game-rgb))`) and the selected tile's tint
+(`rgb(var(--game-rgb) / 0.2)`). CSS cannot take an alpha off a hex string, so a
+hex would need a second value kept in sync. Selection is that tint rather than
+one shared accent, so a picked tile reads as *this game*, picked.
 
 The selector is a **wrapping flex row, not a grid**: the number of games does
 not divide evenly into the columns, and a grid stranded the last one or two
 tiles against the left edge instead of centring them under the rest. The label
 is clamped to two lines so a long name cannot make its tile taller than the
-others.
+others, and the phone tile width is set by the longest name ("Backgammon") —
+below it the label breaks mid-word, which reads as a rendering fault.
 
 **The menu opens on the last game actually PLAYED** (`whist-last-game`).
 Written by the `startGame` wrapper that every launch goes through, and by
@@ -765,7 +779,7 @@ When adding any new game (not just an archetype here), there are **five** wiring
 1. `src/types/game-common.ts` — add the `GameType` enum entry.
 2. `src/games/registry.ts` — add the `GAME_REGISTRY[...]` entry with lazy-loaded screens.
 3. `src/components/lobby/MainMenu.tsx` `GAME_I18N` — required by the strict `Record<GameType, ...>` type, build fails without it.
-4. `src/components/lobby/GameIcon.tsx` — add a `case` to `marks()`. Without one the game falls back to a generic tile, which is not a build error, so it is easy to miss.
+4. `src/components/lobby/GameIcon.tsx` — add a `case` to `marks()`, and an entry to `COLOURS` in `gameColours.ts`. Neither is a build error, so both are easy to miss: the game just gets a generic grey tile.
 5. `src/components/lobby/MainMenu.tsx` `SOLO_GAMES` — **add a solo game to this set.** `handleSinglePlayer` ends with a bare `else` that dispatches Yaniv settings, so a solo game missing from the set silently launches Yaniv. The same set drives the two guards that hide the multiplayer controls, so one entry covers all three. A game WITH multiplayer instead needs its own branch in `handleSinglePlayer` alongside the others.
 
 ### Adding a new archetype

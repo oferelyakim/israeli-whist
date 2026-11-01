@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { GameType, PlayerType } from '../../types/game-common';
 import { GAME_REGISTRY } from '../../games/registry';
 import type { GameConfig } from '../../games/registry';
 import { CardSetType } from '../../games/quartets/types';
 import { RummyVariant } from '../../games/rummy/types';
 import { GameIcon } from './GameIcon';
+import { gameColourRgb } from './gameColours';
 import { useTranslation } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import { isFirebaseConfigured } from '../../multiplayer/firebase-config';
@@ -382,6 +384,8 @@ export function MainMenu({ onStartGame, onCreateRoom, onJoinRoom }: MainMenuProp
               className={`game-tab ${selectedGame === config.type ? 'game-tab-active' : ''}`}
               onClick={() => handleGameSelect(config.type)}
               aria-pressed={selectedGame === config.type}
+              // Drives both the icon's colour and the selected tile's tint.
+              style={{ '--game-rgb': gameColourRgb(config.type) } as CSSProperties}
             >
               <GameIcon game={config.type} />
               <span className="game-tab-label">{t(GAME_I18N[config.type].name)}</span>

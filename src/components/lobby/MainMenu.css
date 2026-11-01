@@ -124,6 +124,8 @@
   width: 30px;
   height: 30px;
   flex-shrink: 0;
+  /* The icon draws with currentColor, so this one line colours the whole mark. */
+  color: rgb(var(--game-rgb, 148 163 184));
 }
 
 .game-tab-label {
@@ -145,14 +147,16 @@
   color: var(--text-light);
 }
 
+/* Selection is a tint of the game's own colour rather than one shared blue, so
+   a tile reads as "this game, picked" instead of just "picked". */
 .game-tab-active {
-  background: var(--accent);
-  color: #000;
-  border-color: var(--accent);
+  background: rgb(var(--game-rgb, 148 163 184) / 0.2);
+  border-color: rgb(var(--game-rgb, 148 163 184) / 0.85);
+  color: #fff;
 }
 
 .game-tab-active:hover {
-  background: #81d4fa;
+  background: rgb(var(--game-rgb, 148 163 184) / 0.3);
 }
 
 /* Player count selector */
@@ -372,7 +376,9 @@
   .game-selector { gap: 6px; }
 
   .game-tab {
-    flex-basis: 72px;
+    /* Wide enough that the longest name ("Backgammon") sets on one line —
+       below this it breaks mid-word, which looks like a bug. */
+    flex-basis: 78px;
     min-height: 76px;
     padding: 8px 3px;
     gap: 6px;
