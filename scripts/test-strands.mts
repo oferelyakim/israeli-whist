@@ -18,7 +18,7 @@ import {
 import { packPaths } from '../src/games/strands/engine/packer';
 import { buildLevel, gridKey } from '../src/games/strands/engine/level';
 import {
-  createInitialStrandsState, hintsAvailable, strandsReducer,
+  createInitialStrandsState, hintsAvailable, strandsReducer, tapOutcome,
 } from '../src/games/strands/engine/game-reducer';
 import { EN_THEMES } from '../src/games/strands/data/themes-en';
 import { HE_THEMES } from '../src/games/strands/data/themes-he';
@@ -281,6 +281,54 @@ console.log('\nTracing');
 
   const tooShort = traceWord(fresh(level), word.path.slice(0, 2));
   check('a run shorter than the minimum is refused', tooShort.lastResult.kind === 'invalid');
+}
+
+// ─── 5b. Tapping letters one at a time ───────────────────────────────
+
+console.log('\nTapping');
+{
+  const level = sample[0];
+  const word = level.words.find((w) => !w.spangram) ?? level.words[0];
+  const [a, b] = word.path;
+  const far = level.letters.map((_, i) => i).find((i) => !areAdjacent(a, i) && i !== a) as number;
+
+  check('the first tap starts a word', tapOutcome([], a) === 'start');
+  check('tapping a touching letter adds it', tapOutcome([a], b) === 'extend');
+  check('tapping a letter that is not touching starts again', tapOutcome([a], far) === 'start');
+  check('tapping the last letter again sends the word', tapOutcome([a, b], b) === 'submit');
+  check('tapping the only letter cancels it', tapOutcome([a], a) === 'clear');
+  check('tapping a letter already used starts again',
+    tapOutcome(word.path.slice(0, 3), word.path[0]) === 'start');
+
+  check('clearing empties the trace',
+    strandsReducer(
+      strandsReducer(fresh(level), { type: 'TRACE_START', cell: a }),
+      { type: 'TRACE_CLEAR' },
+    ).trace.length === 0);
+
+  /** Plays a word by tapping, exactly as the board does. */
+  function tapThrough(start: StrandsGameState, taps: readonly number[]): StrandsGameState {
+    let next = start;
+    for (const cell of taps) {
+      switch (tapOutcome(next.trace, cell)) {
+        case 'start': next = strandsReducer(next, { type: 'TRACE_START', cell }); break;
+        case 'extend': next = strandsReducer(next, { type: 'TRACE_ENTER', cell }); break;
+        case 'clear': next = strandsReducer(next, { type: 'TRACE_CLEAR' }); break;
+        default: next = strandsReducer(next, { type: 'TRACE_END', ...NEVER_A_WORD }); break;
+      }
+    }
+    return next;
+  }
+
+  // Tap every letter, then the last one once more to send it.
+  const tapped = tapThrough(fresh(level), [...word.path, word.path[word.path.length - 1]]);
+  check('tapping a word out letter by letter finds it', tapped.foundIds.length === 1);
+  check('and the trace is cleared afterwards', tapped.trace.length === 0);
+
+  // Without that final tap the word is only selected, not sent.
+  const held = tapThrough(fresh(level), word.path);
+  check('without the final tap the word is only held',
+    held.foundIds.length === 0 && held.trace.length === word.path.length);
 }
 
 // ─── 6. Bonus words and hints ────────────────────────────────────────

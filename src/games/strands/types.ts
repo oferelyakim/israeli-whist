@@ -80,6 +80,7 @@ export type StrandsAction =
   | { type: 'LOAD_LEVEL'; level: StrandsLevel }
   | { type: 'TRACE_START'; cell: number }
   | { type: 'TRACE_ENTER'; cell: number }
+  | { type: 'TRACE_CLEAR' }
   | { type: 'TRACE_END'; isWord: (key: string) => boolean; display: (key: string) => string }
   | { type: 'CLEAR_RESULT' }
   | { type: 'HINT' }

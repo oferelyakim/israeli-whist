@@ -13,6 +13,27 @@ export function minTraceLength(lang: StrandsLang): number {
   return lang === 'he' ? 3 : 4;
 }
 
+/**
+ * What a TAP on `cell` should do, given what is already traced.
+ *
+ * Letters can be tapped one at a time as well as dragged through, so a press
+ * has to mean different things depending on where it lands. Kept here rather
+ * than in the component because it is the rule, not the rendering.
+ */
+export type TapOutcome = 'start' | 'extend' | 'submit' | 'clear';
+
+export function tapOutcome(trace: readonly number[], cell: number): TapOutcome {
+  if (trace.length === 0) return 'start';
+  const last = trace[trace.length - 1];
+  // Tapping the letter you just added submits the word — except when it is the
+  // only one, where there is nothing to submit and it means "never mind".
+  if (cell === last) return trace.length >= 2 ? 'submit' : 'clear';
+  // A letter already in the word, or one that does not touch the last one,
+  // starts again from there rather than doing nothing.
+  if (trace.includes(cell)) return 'start';
+  return areAdjacent(last, cell) ? 'extend' : 'start';
+}
+
 export function createInitialStrandsState(
   settings: StrandsSettings,
   lang: StrandsLang,
@@ -57,6 +78,9 @@ export function strandsReducer(state: StrandsGameState, action: StrandsAction): 
     case 'TRACE_START':
       if (state.phase !== StrandsPhase.PLAYING) return state;
       return { ...state, trace: [action.cell], lastResult: { kind: 'none' } };
+
+    case 'TRACE_CLEAR':
+      return state.trace.length === 0 ? state : { ...state, trace: [], lastResult: { kind: 'none' } };
 
     case 'TRACE_ENTER': {
       if (state.phase !== StrandsPhase.PLAYING || state.trace.length === 0) return state;

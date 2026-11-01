@@ -2,10 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BONUS_PER_HINT, StrandsPhase } from '../types';
 import type { StrandsGameState, StrandsLang } from '../types';
 import { COLS, ROWS } from '../engine/grid';
-import { hintsAvailable } from '../engine/game-reducer';
+import { hintsAvailable, tapOutcome } from '../engine/game-reducer';
 import { useTranslation } from '../../../i18n/LanguageContext';
 import './StrandsTable.css';
 
+/** A press that moves less than this is a tap, not a drag. */
+const TAP_SLOP = 8;
 const STEP_MIN = 34;
 const STEP_MAX = 68;
 /**
@@ -23,6 +25,7 @@ export interface StrandsTableProps {
   loading: boolean;
   onTraceStart: (cell: number) => void;
   onTraceEnter: (cell: number) => void;
+  onTraceClear: () => void;
   onTraceEnd: () => void;
   onClearResult: () => void;
   onHint: () => void;
@@ -32,7 +35,7 @@ export interface StrandsTableProps {
 }
 
 export function StrandsTable({
-  gameState, loading, onTraceStart, onTraceEnter, onTraceEnd,
+  gameState, loading, onTraceStart, onTraceEnter, onTraceClear, onTraceEnd,
   onClearResult, onHint, onNextLevel, onSetLanguage, onBack,
 }: StrandsTableProps) {
   const { t } = useTranslation();
@@ -40,6 +43,7 @@ export function StrandsTable({
   const gridRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState(48);
   const [tracing, setTracing] = useState(false);
+  const pressRef = useRef<{ x: number; y: number; submitOnUp: boolean; moved: boolean } | null>(null);
 
   const { level, foundIds, trace, bonusWords, lastResult, phase } = gameState;
   const done = phase === StrandsPhase.COMPLETE;
@@ -112,23 +116,41 @@ export function StrandsTable({
     const cell = cellAt(e.clientX, e.clientY);
     if (cell === null) return;
     (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+
+    const outcome = tapOutcome(trace, cell);
+    if (outcome === 'start') onTraceStart(cell);
+    else if (outcome === 'extend') onTraceEnter(cell);
+    else if (outcome === 'clear') onTraceClear();
+    // 'submit' waits for the release, so a drag that happens to begin on the
+    // last letter is still a drag.
+
+    pressRef.current = {
+      x: e.clientX, y: e.clientY, submitOnUp: outcome === 'submit', moved: false,
+    };
     setTracing(true);
-    onTraceStart(cell);
-  }, [cellAt, done, onTraceStart]);
+  }, [cellAt, done, onTraceClear, onTraceEnter, onTraceStart, trace]);
 
   const handleMove = useCallback((e: React.PointerEvent) => {
-    if (!tracing) return;
+    const press = pressRef.current;
+    if (!tracing || !press) return;
+    if (!press.moved && Math.hypot(e.clientX - press.x, e.clientY - press.y) > TAP_SLOP) {
+      press.moved = true;
+    }
     const cell = cellAt(e.clientX, e.clientY);
     if (cell !== null) onTraceEnter(cell);
   }, [cellAt, onTraceEnter, tracing]);
 
   const handleUp = useCallback((e: React.PointerEvent) => {
+    const press = pressRef.current;
+    pressRef.current = null;
     if (!tracing) return;
     setTracing(false);
     if ((e.currentTarget as HTMLElement).hasPointerCapture?.(e.pointerId)) {
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     }
-    onTraceEnd();
+    // A drag ends by sending the word. A tap only sends it when it landed back
+    // on the last letter; otherwise the word stays up, waiting for the next tap.
+    if (press?.moved || press?.submitOnUp) onTraceEnd();
   }, [onTraceEnd, tracing]);
 
   const centre = useCallback((cell: number) => ({

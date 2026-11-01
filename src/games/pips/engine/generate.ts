@@ -8,7 +8,7 @@ import type {
   PipsPuzzle,
   PipsRegion,
 } from '../types';
-import { MAX_PIP, key, parseKey, stepFrom } from './board';
+import { MAX_PIP, REGION_COLOURS, key, parseKey, regionsTouch, stepFrom } from './board';
 import { hasUniqueSolution } from './solver';
 
 interface DifficultySpec {
@@ -258,6 +258,57 @@ function candidateLadder(
   return [{ kind: 'NONE', value: 0 }, ...middle, { kind: 'SUM', value: sum }];
 }
 
+/**
+ * Colours the regions so two that touch never share one.
+ *
+ * Numbering them 0,1,2,... in order was fine until a board had more regions
+ * than the palette has colours: the twelfth region wrapped back to the first
+ * colour, and when the two touched they looked like a single region. Greedy
+ * graph colouring, most-constrained region first, and the palette is wide
+ * enough that it never has to reuse one.
+ */
+function assignColours(regions: PipsRegion[], rng: () => number): void {
+  const neighbours = regions.map(() => new Set<number>());
+  for (let a = 0; a < regions.length; a++) {
+    for (let b = a + 1; b < regions.length; b++) {
+      if (regionsTouch(regions[a], regions[b])) {
+        neighbours[a].add(b);
+        neighbours[b].add(a);
+      }
+    }
+  }
+
+  const order = regions
+    .map((_, i) => i)
+    .sort((x, y) => neighbours[y].size - neighbours[x].size);
+  const chosen = new Array<number>(regions.length).fill(-1);
+  const used = new Array<number>(REGION_COLOURS).fill(0);
+
+  for (const i of order) {
+    const taken = new Set<number>();
+    for (const n of neighbours[i]) {
+      if (chosen[n] >= 0) taken.add(chosen[n]);
+    }
+
+    let best = -1;
+    let bestScore = Infinity;
+    for (let colour = 0; colour < REGION_COLOURS; colour++) {
+      if (taken.has(colour)) continue;
+      const score = used[colour] + rng() * 0.5;
+      if (score < bestScore) {
+        bestScore = score;
+        best = colour;
+      }
+    }
+    // Every colour blocked would need a region touching twelve others; fall
+    // back rather than leaving it uncoloured.
+    chosen[i] = best >= 0 ? best : 0;
+    used[chosen[i]] += 1;
+  }
+
+  regions.forEach((region, i) => { region.colour = chosen[i]; });
+}
+
 function buildOnce(
   rng: () => number,
   seed: number,
@@ -319,7 +370,7 @@ function buildOnce(
     // A region the ladder emptied is just loose cells now; drop it so the board
     // shows no tint and no badge there.
     const kept = regions.filter((region) => region.kind !== 'NONE');
-    kept.forEach((region, i) => { region.colour = i; });
+    assignColours(kept, rng);
 
     return {
       difficulty,

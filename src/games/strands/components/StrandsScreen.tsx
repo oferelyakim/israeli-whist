@@ -8,7 +8,7 @@ import { useTranslation } from '../../../i18n/LanguageContext';
 export default function StrandsScreen({ settings, onBack }: GameScreenProps) {
   const { t, language } = useTranslation();
   const {
-    gameState, loading, error, startGame, traceStart, traceEnter, traceEnd,
+    gameState, loading, error, startGame, traceStart, traceEnter, traceClear, traceEnd,
     clearResult, hint, nextLevel, setLanguage,
   } = useStrandsGame();
 
@@ -52,6 +52,7 @@ export default function StrandsScreen({ settings, onBack }: GameScreenProps) {
       loading={loading}
       onTraceStart={traceStart}
       onTraceEnter={traceEnter}
+      onTraceClear={traceClear}
       onTraceEnd={traceEnd}
       onClearResult={clearResult}
       onHint={hint}

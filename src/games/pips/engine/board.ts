@@ -10,6 +10,16 @@ import type {
 /** Highest pip count on a double-six tile. */
 export const MAX_PIP = 6;
 
+/**
+ * How many colours the board may draw regions in.
+ *
+ * The renderer's palette must hold exactly this many. Hard boards reach twelve
+ * regions, and with a shorter palette two of them wrap to the same colour; when
+ * those two happen to touch they read as one scattered region, which is exactly
+ * the sort of thing a player tries to fill with a single domino.
+ */
+export const REGION_COLOURS = 12;
+
 export function key(row: number, col: number): CellKey {
   return `${row},${col}`;
 }
@@ -90,6 +100,21 @@ export function regionsByCell(regions: readonly PipsRegion[]): Map<CellKey, Pips
     for (const cell of region.cells) index.set(cell, region);
   }
   return index;
+}
+
+/** Do two regions touch, counting corners? Two blobs meeting at a corner read
+ *  as one shape, so diagonal contact matters as much as edge contact. */
+export function regionsTouch(a: PipsRegion, b: PipsRegion): boolean {
+  const theirs = new Set(b.cells);
+  for (const cell of a.cells) {
+    const [row, col] = parseKey(cell);
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (theirs.has(key(row + dr, col + dc))) return true;
+      }
+    }
+  }
+  return false;
 }
 
 export type RegionStatus = 'open' | 'ok' | 'bad';
