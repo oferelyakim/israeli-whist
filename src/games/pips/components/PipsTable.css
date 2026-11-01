@@ -1,0 +1,358 @@
+/* ─── Table shell ────────────────────────────────────────────── */
+
+.pips-table {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-main, 'Segoe UI', sans-serif);
+  color: #fff;
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+  background: linear-gradient(170deg, #1b2440 0%, #141a2e 55%, #0d111f 100%);
+}
+
+/* ─── Top bar ────────────────────────────────────────────────── */
+
+.pips-top-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 2px;
+  flex-shrink: 0;
+}
+
+.pips-icon-btn {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  color: #fff;
+  cursor: pointer;
+  padding: 0;
+}
+
+.pips-icon-btn:hover { background: rgba(0, 0, 0, 0.45); }
+
+.pips-title {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.pips-level { font-size: 18px; font-weight: 700; }
+.pips-difficulty { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #8fa0c8; }
+
+.pips-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  font-size: 12px;
+  color: #8fa0c8;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  min-width: 44px;
+}
+
+.pips-clock { opacity: 0.85; }
+
+.pips-instruction {
+  margin: 2px 12px 0;
+  text-align: center;
+  font-size: 12px;
+  color: #7f8db0;
+  flex-shrink: 0;
+}
+
+/* ─── Board ──────────────────────────────────────────────────── */
+
+.pips-board-area {
+  flex-grow: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  overflow: hidden;
+}
+
+.pips-board { position: relative; flex-shrink: 0; }
+
+/* Mat squares overlap by MAT_PAD, so they fuse into one rounded tray. */
+.pips-mat {
+  position: absolute;
+  border-radius: 12px;
+  background: #b9a68c;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.pips-cell {
+  position: absolute;
+  box-sizing: border-box;
+  border-radius: 9px;
+  transition: background 0.12s ease;
+}
+
+.pips-cell-ok { box-shadow: inset 0 0 0 3px rgba(126, 230, 160, 0.95); }
+.pips-cell-bad { box-shadow: inset 0 0 0 3px rgba(226, 96, 90, 0.9); }
+
+.pips-placed {
+  position: absolute;
+  cursor: grab;
+  touch-action: none;
+}
+
+.pips-placed-held { opacity: 0.3; }
+
+/* ─── Domino tiles ───────────────────────────────────────────── */
+
+.pips-tile {
+  display: flex;
+  box-sizing: border-box;
+  background: linear-gradient(160deg, #fffdf7 0%, #f2ece0 100%);
+  border-radius: 7px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 5px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.pips-tile-h { flex-direction: row; }
+.pips-tile-v { flex-direction: column; }
+
+.pips-tile-half {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+}
+
+.pips-tile-h .pips-tile-half:first-child { border-right: 1px solid #cdc5b4; }
+.pips-tile-v .pips-tile-half:first-child { border-bottom: 1px solid #cdc5b4; }
+
+.pips-pipgrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 9%;
+}
+
+.pips-dot { border-radius: 50%; background: transparent; }
+.pips-dot-on { background: #2b2f3a; box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.3); }
+
+/* ─── Clue badges ────────────────────────────────────────────── */
+
+.pips-badge {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  transform: rotate(45deg);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-weight: 700;
+  z-index: 4;
+}
+
+.pips-badge-text {
+  transform: rotate(-45deg);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.pips-badge-ok { box-shadow: 0 0 0 2px rgba(126, 230, 160, 0.95), 0 2px 6px rgba(0, 0, 0, 0.5); }
+.pips-badge-bad { box-shadow: 0 0 0 2px rgba(226, 96, 90, 0.95), 0 2px 6px rgba(0, 0, 0, 0.5); }
+
+/* ─── Tray ───────────────────────────────────────────────────── */
+
+.pips-tray {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 10px;
+  min-height: 72px;
+  flex-shrink: 0;
+}
+
+.pips-tray-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.pips-tray-btn-on {
+  background: rgba(122, 170, 255, 0.16);
+  border-color: rgba(122, 170, 255, 0.6);
+}
+
+.pips-tray-btn-dragging { opacity: 0.3; }
+
+.pips-tray-empty { font-size: 13px; color: #7f8db0; }
+
+.pips-ghost {
+  position: fixed;
+  z-index: 900;
+  pointer-events: none;
+  opacity: 0.95;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55));
+}
+
+/* ─── Actions ────────────────────────────────────────────────── */
+
+.pips-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  padding: 0 12px 18px;
+  flex-shrink: 0;
+}
+
+.pips-btn {
+  min-height: 44px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.pips-btn:hover:not(:disabled) { background: rgba(0, 0, 0, 0.45); }
+.pips-btn:disabled { opacity: 0.4; cursor: default; }
+
+.pips-btn-primary {
+  background: linear-gradient(160deg, #7aa8ff 0%, #3f67d8 100%);
+  border: none;
+  color: #0b1430;
+  font-weight: 700;
+}
+
+.pips-btn-primary:hover { filter: brightness(1.07); }
+
+/* ─── Win overlay ────────────────────────────────────────────── */
+
+.pips-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: pips-fade 0.3s ease-out;
+}
+
+@keyframes pips-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.pips-modal {
+  width: 100%;
+  max-width: 330px;
+  box-sizing: border-box;
+  padding: 24px 22px;
+  text-align: center;
+  background: linear-gradient(135deg, #1c2748 0%, #2c3c6b 100%);
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55), 0 0 60px rgba(122, 168, 255, 0.18);
+  animation: pips-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes pips-pop {
+  from { transform: scale(0.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.pips-modal-mark {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 700;
+  color: #0b1430;
+  background: linear-gradient(160deg, #8fe6b0 0%, #38b980 100%);
+  border-radius: 50%;
+  animation: pips-bob 1s ease-in-out infinite alternate;
+}
+
+@keyframes pips-bob {
+  from { transform: translateY(0); }
+  to { transform: translateY(-5px); }
+}
+
+.pips-modal h2 {
+  margin: 12px 0 4px;
+  font-size: 25px;
+  color: #a9c8ff;
+  text-shadow: 0 2px 10px rgba(122, 168, 255, 0.4);
+}
+
+.pips-modal p { margin: 0 0 14px; font-size: 14px; color: #c3cde6; }
+
+.pips-modal-stats { display: flex; gap: 8px; margin-bottom: 4px; }
+
+.pips-modal-stat {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 4px;
+  background: rgba(0, 0, 0, 0.28);
+  border-radius: 10px;
+}
+
+.pips-modal-value { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.pips-modal-gold { color: #ffd166; }
+
+.pips-modal-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #8fa0c8;
+}
+
+.pips-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+/* ─── Phones ─────────────────────────────────────────────────── */
+
+@media (max-width: 699px) {
+  .pips-top-bar { padding: 8px 8px 2px; gap: 8px; }
+  .pips-tray { min-height: 64px; padding: 4px 8px; }
+  .pips-actions { padding: 0 8px 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pips-modal, .pips-modal-mark, .pips-overlay { animation: none; }
+}

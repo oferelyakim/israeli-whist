@@ -16,6 +16,7 @@ export enum GameType {
   MAHJONG = 'MAHJONG',
   WORD_WONDERS = 'WORD_WONDERS',
   GEM_BLOCKS = 'GEM_BLOCKS',
+  PIPS = 'PIPS',
 }
 
 export enum PlayerType {

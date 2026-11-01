@@ -1,12 +1,12 @@
 # Israeli-Whist (multi-game card app)
 
-Vite + React 19 + TypeScript card-game suite. Thirteen game modes share a common
+Vite + React 19 + TypeScript card-game suite. Fourteen game modes share a common
 lobby/scoring/multiplayer infrastructure: WhistAchim, Yaniv, Quartets,
 Solitaire, Shithead, Israeli Rummy (Rummikub-style), Backgammon, Checkers,
 Mahjong Solitaire (solo tile matching), Word Wonders (solo word crossword),
-Gem Blocks (solo 9x9 block puzzle), Woodoku (solo block puzzle), and Escape
-Room (solo timed puzzle stages). Woodoku and Escape Room are currently hidden
-from the menu.
+Gem Blocks (solo 9x9 block puzzle), Pips (solo domino-fitting puzzle),
+Woodoku (solo block puzzle), and Escape Room (solo timed puzzle stages).
+Woodoku and Escape Room are currently hidden from the menu.
 Multiplayer is built on Firebase Realtime DB; bots run client-side.
 PWA via vite-plugin-pwa.
 
@@ -567,6 +567,87 @@ bot to confirm the goal is actually reachable.
   --log-level=warning && node /tmp/test-gb.mjs
 ```
 
+## Pips (added 2026-11-01)
+
+Solo logic puzzle at `src/games/pips/`: fit every domino onto an irregular
+board so each coloured region satisfies its clue. Levels are generated, so
+progress is nothing but a level number. Solo only; the multiplayer screen is a
+stub.
+
+### Clue vocabulary
+
+A region carries one of `SUM` (exact total), `GT`, `LT`, `EQUAL` (all cells the
+same) or `DISTINCT` (all different). Cells in no region only have to be covered.
+`regionStatus` returns `open | ok | bad`, and **`bad` is permanent** — every
+test is monotone in the cells still to be filled, because a pip is never
+negative and never above six. That is what lets the solver prune on it and the
+UI warn the player mid-board. If you add a clue kind, it must keep that
+property or the solver will prune away real solutions.
+
+### The board is grown by laying dominoes, not by carving a shape
+
+`growBoard` places tiles one at a time, so the region is tileable **by
+construction** — the growth order is itself a winning line. A carve-then-check
+generator would hand back boards that cannot be filled, which is the worst bug
+class here. Each candidate tile is scored on how many occupied neighbours it
+touches, with jitter, so shapes stay compact enough for a phone without
+collapsing into plain rectangles.
+
+### Uniqueness: the padlock pattern again
+
+Same shape as the Escape Room padlock generator. Pin every region to its exact
+sum, check that leaves one answer, then walk each region down a ladder of
+weaker clues (`NONE` first, then `>`/`<`/`=`/`\u2260` shuffled, exact sum last)
+and keep the FIRST rung that still leaves one answer. Regions the ladder empties
+are dropped and become loose cells. So the clue set is minimal-ish and varied
+rather than a wall of exact sums.
+
+`solve` counts distinct **pip layouts**, not placements: if two tilings show the
+player the same grid, the puzzle reads as having one answer. It always extends
+from the first uncovered cell in row-major order, so it can only reach right or
+down and builds each tiling exactly once.
+
+### Region size is the uniqueness lever, not board size
+
+`regionWeights` in `DIFFICULTY_SPEC` is the knob that matters. A 3-cell region
+with only a sum is weak, and boards full of them stay ambiguous no matter how
+many times the generator retries:
+
+| hard-board region sizes | non-unique | worst generation |
+|---|---|---|
+| 1:1:1 (uniform) | 11/150 | 1813 ms |
+| 8:10:2 (shipped) | 0/150 | 765 ms |
+| no 3-cell regions | 0/150 | 327 ms |
+
+Measured over 600 boards at the shipped weights: 0 non-unique. If you widen
+regions, re-measure both columns — the cost shows up as slow generation first
+and ambiguous boards second.
+
+`\u2260` is rare on purpose-by-consequence: it is usually true of a region but
+almost never strong enough to pin the answer, so the ladder passes it over.
+Don't "fix" that by forcing it in — an unsound clue set is worse than a dull one.
+
+### Gotcha: badges hang off the board
+
+A clue badge is pinned to the outer corner of its region, so badges on the right
+and bottom edges stick out past the mat. The cell-size measurement reserves
+`BADGE_OVERHANG` on both sides (as well as the board area's padding and the
+mat's own `MAT_PAD`) or the rightmost badge is clipped by the viewport — the
+same trap as the Gem Blocks board overflow.
+
+The mat is drawn as one slightly-oversized rounded square per cell; overlapping
+neighbours fuse into a single tray with rounded outer corners, which is far less
+work than computing the outline of an arbitrary polyomino.
+
+**Regression test:** `scripts/test-pips.mts` brute-force-verifies every generated
+board has exactly one answer, checks each clue rule including its monotonicity,
+and replays each generator's own answer through the REAL reducer.
+```
+./node_modules/.bin/esbuild --bundle scripts/test-pips.mts \
+  --platform=node --format=esm --outfile=/tmp/test-pips.mjs \
+  --log-level=warning && node /tmp/test-pips.mjs
+```
+
 ### Adding a new game (registry + MainMenu wiring)
 
 When adding any new game (not just an archetype here), there are **four** wiring points — miss the fourth and the menu silently launches Yaniv:
@@ -574,7 +655,7 @@ When adding any new game (not just an archetype here), there are **four** wiring
 1. `src/types/game-common.ts` — add the `GameType` enum entry.
 2. `src/games/registry.ts` — add the `GAME_REGISTRY[...]` entry with lazy-loaded screens.
 3. `src/components/lobby/MainMenu.tsx` `GAME_I18N` — required by the strict `Record<GameType, ...>` type, build fails without it.
-4. `src/components/lobby/MainMenu.tsx` `handleSinglePlayer` — **add an explicit branch (or early return) for the new game.** The function ends with a bare `else` that dispatches Yaniv settings; any game not explicitly listed falls through and launches Yaniv. Solitaire/Woodoku/Escape Room each have their own early-return blocks at the top. If your game is solo, also add it to the `selectedGame !== SOLITAIRE && selectedGame !== WOODOKU && ...` guards that hide the multiplayer controls.
+4. `src/components/lobby/MainMenu.tsx` `SOLO_GAMES` — **add a solo game to this set.** `handleSinglePlayer` ends with a bare `else` that dispatches Yaniv settings, so a solo game missing from the set silently launches Yaniv. The same set drives the two guards that hide the multiplayer controls, so one entry covers all three. A game WITH multiplayer instead needs its own branch in `handleSinglePlayer` alongside the others.
 
 ### Adding a new archetype
 
@@ -606,4 +687,5 @@ Archetype `hint()` and `validate()` return strings like `'escape.padlock.clue.di
 - Don't sample the Gem Blocks shapes uniformly — the weighting is what keeps the 14-gem goal fair (see "Gem Blocks" above).
 - Don't ship Word Wonders word lists without the frequency filter, and don't add the raw Hspell lexicon as a dependency (AGPL) — see "Word Wonders" above.
 - Don't replace the Mahjong pair-assignment dealer with a random shuffle — it would deal unfinishable boards (see "Mahjong Solitaire" above).
+- Don't grow the Pips board by carving a shape and hoping it tiles, and don't add a clue kind whose `bad` verdict can later come good — the solver prunes on that being permanent (see "Pips" above).
 - Don't naively append in the bot layoff loop. `canLayOff` is true if EITHER append OR prepend yields a valid meld (low-end run extensions like 10♣→[J♣,Q♣,K♣] only work as prepend). Always test both `[...meld.cards, card]` and `[card, ...meld.cards]` against `isValidMeld` and pick the valid arrangement — appending blindly produced positionally-invalid runs and `selfValidateCommit` then reverted the entire turn (the "bots only play sets, never lay off" symptom). Regression: `scripts/test-bot-layoff.mts`.

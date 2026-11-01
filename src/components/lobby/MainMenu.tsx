@@ -10,6 +10,24 @@ import { isFirebaseConfigured } from '../../multiplayer/firebase-config';
 import './MainMenu.css';
 
 // Map game types to their translation keys
+/**
+ * Games with no multiplayer screen.
+ *
+ * One set rather than a chain of `!==` comparisons repeated at every call
+ * site: the old form had to be edited in four places to add a game, and
+ * `handleSinglePlayer` ends in a bare `else` that starts Yaniv, so a game
+ * missed there launches the wrong game instead of failing loudly.
+ */
+const SOLO_GAMES: ReadonlySet<GameType> = new Set([
+  GameType.SOLITAIRE,
+  GameType.WOODOKU,
+  GameType.ESCAPE_ROOM,
+  GameType.MAHJONG,
+  GameType.WORD_WONDERS,
+  GameType.GEM_BLOCKS,
+  GameType.PIPS,
+]);
+
 const GAME_I18N: Record<GameType, { name: TranslationKey; description: TranslationKey; rules: TranslationKey[] }> = {
   [GameType.WHIST]: {
     name: 'registry.whist.name',
@@ -86,6 +104,11 @@ const GAME_I18N: Record<GameType, { name: TranslationKey; description: Translati
     description: 'registry.gemblocks.description',
     rules: ['registry.gemblocks.rule1', 'registry.gemblocks.rule2', 'registry.gemblocks.rule3', 'registry.gemblocks.rule4', 'registry.gemblocks.rule5'],
   },
+  [GameType.PIPS]: {
+    name: 'registry.pips.name',
+    description: 'registry.pips.description',
+    rules: ['registry.pips.rule1', 'registry.pips.rule2', 'registry.pips.rule3', 'registry.pips.rule4', 'registry.pips.rule5'],
+  },
 };
 
 interface MainMenuProps {
@@ -153,9 +176,9 @@ export function MainMenu({ onStartGame, onCreateRoom, onJoinRoom }: MainMenuProp
   };
 
   const handleSinglePlayer = () => {
-    if (selectedGame === GameType.SOLITAIRE) {
-      onStartGame(GameType.SOLITAIRE, {
-        gameType: GameType.SOLITAIRE,
+    if (SOLO_GAMES.has(selectedGame)) {
+      onStartGame(selectedGame, {
+        gameType: selectedGame,
         numPlayers: 1,
         playerNames: [playerName],
         playerTypes: [PlayerType.HUMAN],
@@ -163,55 +186,6 @@ export function MainMenu({ onStartGame, onCreateRoom, onJoinRoom }: MainMenuProp
       return;
     }
 
-    if (selectedGame === GameType.WOODOKU) {
-      onStartGame(GameType.WOODOKU, {
-        gameType: GameType.WOODOKU,
-        numPlayers: 1,
-        playerNames: [playerName],
-        playerTypes: [PlayerType.HUMAN],
-      });
-      return;
-    }
-
-    if (selectedGame === GameType.ESCAPE_ROOM) {
-      onStartGame(GameType.ESCAPE_ROOM, {
-        gameType: GameType.ESCAPE_ROOM,
-        numPlayers: 1,
-        playerNames: [playerName],
-        playerTypes: [PlayerType.HUMAN],
-      });
-      return;
-    }
-
-    if (selectedGame === GameType.MAHJONG) {
-      onStartGame(GameType.MAHJONG, {
-        gameType: GameType.MAHJONG,
-        numPlayers: 1,
-        playerNames: [playerName],
-        playerTypes: [PlayerType.HUMAN],
-      });
-      return;
-    }
-
-    if (selectedGame === GameType.WORD_WONDERS) {
-      onStartGame(GameType.WORD_WONDERS, {
-        gameType: GameType.WORD_WONDERS,
-        numPlayers: 1,
-        playerNames: [playerName],
-        playerTypes: [PlayerType.HUMAN],
-      });
-      return;
-    }
-
-    if (selectedGame === GameType.GEM_BLOCKS) {
-      onStartGame(GameType.GEM_BLOCKS, {
-        gameType: GameType.GEM_BLOCKS,
-        numPlayers: 1,
-        playerNames: [playerName],
-        playerTypes: [PlayerType.HUMAN],
-      });
-      return;
-    }
 
     const playerCount = selectedGame === GameType.WHIST ? 4 : numPlayers;
     const aiNames = BOT_NAME_KEYS.slice(0, playerCount - 1).map((key) => t(key));
@@ -454,12 +428,12 @@ export function MainMenu({ onStartGame, onCreateRoom, onJoinRoom }: MainMenuProp
 
         <div className="menu-buttons">
           <button className="menu-btn menu-btn-primary" onClick={handleSinglePlayer}>
-            {(selectedGame === GameType.SOLITAIRE || selectedGame === GameType.WOODOKU || selectedGame === GameType.ESCAPE_ROOM || selectedGame === GameType.MAHJONG || selectedGame === GameType.WORD_WONDERS || selectedGame === GameType.GEM_BLOCKS)
+            {SOLO_GAMES.has(selectedGame)
               ? t('solitaire.play')
               : t('menu.playVsAI')}
           </button>
 
-          {firebaseReady && selectedGame !== GameType.SOLITAIRE && selectedGame !== GameType.WOODOKU && selectedGame !== GameType.ESCAPE_ROOM && selectedGame !== GameType.MAHJONG && selectedGame !== GameType.WORD_WONDERS && selectedGame !== GameType.GEM_BLOCKS ? (
+          {firebaseReady && !SOLO_GAMES.has(selectedGame) ? (
             <>
               <button
                 className="menu-btn menu-btn-secondary"
@@ -496,7 +470,7 @@ export function MainMenu({ onStartGame, onCreateRoom, onJoinRoom }: MainMenuProp
                 </div>
               )}
             </>
-          ) : selectedGame !== GameType.SOLITAIRE && selectedGame !== GameType.WOODOKU && selectedGame !== GameType.ESCAPE_ROOM && selectedGame !== GameType.MAHJONG && selectedGame !== GameType.WORD_WONDERS && selectedGame !== GameType.GEM_BLOCKS ? (
+          ) : !SOLO_GAMES.has(selectedGame) ? (
             <p className="firebase-hint">
               {t('menu.firebaseHint')}
             </p>
