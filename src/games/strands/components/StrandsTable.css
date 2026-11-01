@@ -1,0 +1,322 @@
+.sw-table {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-main, 'Segoe UI', sans-serif);
+  color: #fff;
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+  background: #111317;
+}
+
+.sw-loading { margin: 40vh auto 0; color: #8b93a3; }
+
+/* ─── Top bar ────────────────────────────────────────────────── */
+
+.sw-top-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 4px;
+  flex-shrink: 0;
+}
+
+.sw-icon-btn {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  color: #fff;
+  cursor: pointer;
+  padding: 0;
+}
+
+.sw-icon-btn:hover { background: rgba(255, 255, 255, 0.12); }
+
+.sw-level { flex-grow: 1; text-align: center; font-size: 16px; font-weight: 700; }
+
+.sw-top-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.sw-clock { font-size: 12px; color: #8b93a3; font-variant-numeric: tabular-nums; }
+
+.sw-lang-btn {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ─── Clue banner ────────────────────────────────────────────── */
+
+.sw-clue {
+  margin: 4px 16px 0;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.sw-clue-label {
+  display: block;
+  padding: 4px;
+  background: #a6d8ef;
+  color: #11212b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.sw-clue-text { display: block; padding: 9px 10px; font-size: 19px; font-weight: 700; }
+
+.sw-progress {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: #a7b0c0;
+  flex-shrink: 0;
+}
+
+/* ─── Grid ───────────────────────────────────────────────────── */
+
+.sw-board-area {
+  flex-grow: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  overflow: hidden;
+}
+
+.sw-grid { position: relative; flex-shrink: 0; touch-action: none; }
+
+.sw-links { position: absolute; left: 0; top: 0; pointer-events: none; }
+
+.sw-link {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sw-link-theme { stroke: #a6d8ef; }
+.sw-link-span { stroke: #f2c43d; }
+.sw-link-trace { stroke: rgba(255, 255, 255, 0.3); }
+
+.sw-cell {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.sw-cell-trace { background: rgba(255, 255, 255, 0.3); }
+.sw-cell-theme { background: #a6d8ef; color: #11212b; }
+.sw-cell-span { background: #f2c43d; color: #2b2200; }
+
+/* A hint lights the letters of a word without giving away their order. */
+.sw-cell-hint {
+  box-shadow: inset 0 0 0 2px #a6d8ef;
+  border: 2px dashed #a6d8ef;
+  box-sizing: border-box;
+}
+
+/* ─── Readout and actions ────────────────────────────────────── */
+
+.sw-readout {
+  min-height: 22px;
+  text-align: center;
+  font-size: 14px;
+  color: #d8e2f0;
+  flex-shrink: 0;
+  padding: 0 12px;
+}
+
+.sw-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 6px 12px 20px;
+  flex-shrink: 0;
+}
+
+.sw-hint-btn {
+  position: relative;
+  min-height: 46px;
+  min-width: 140px;
+  padding: 0 20px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 23px;
+  background: transparent;
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.sw-hint-btn:disabled { cursor: default; color: #99a3b4; }
+
+.sw-hint-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(166, 216, 239, 0.25);
+  transition: width 0.25s ease;
+}
+
+.sw-hint-ready { background: #a6d8ef; color: #11212b; border-color: #a6d8ef; }
+.sw-hint-ready .sw-hint-fill { background: transparent; }
+
+.sw-hint-label { position: relative; }
+
+.sw-bonus-count { font-size: 13px; color: #8b93a3; }
+
+.sw-dict-note {
+  position: fixed;
+  left: 50%;
+  bottom: 6px;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: #6f7686;
+}
+
+/* ─── Completion ─────────────────────────────────────────────── */
+
+.sw-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: sw-fade 0.3s ease-out;
+}
+
+@keyframes sw-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.sw-modal {
+  width: 100%;
+  max-width: 340px;
+  box-sizing: border-box;
+  padding: 24px 20px;
+  text-align: center;
+  background: linear-gradient(135deg, #1a2430 0%, #24364a 100%);
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55), 0 0 60px rgba(166, 216, 239, 0.14);
+  animation: sw-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes sw-pop {
+  from { transform: scale(0.72); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.sw-modal-mark {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 29px;
+  font-weight: 700;
+  color: #11212b;
+  background: #a6d8ef;
+  border-radius: 50%;
+}
+
+.sw-modal h2 { margin: 12px 0 2px; font-size: 24px; color: #a6d8ef; }
+.sw-modal-clue { margin: 0 0 12px; font-size: 15px; font-weight: 600; color: #e6edf6; }
+
+.sw-modal-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.sw-chip {
+  padding: 4px 10px;
+  background: rgba(166, 216, 239, 0.18);
+  border-radius: 999px;
+  font-size: 12px;
+  color: #dceaf5;
+}
+
+.sw-chip-span { background: rgba(242, 196, 61, 0.24); color: #f6dc96; font-weight: 700; }
+
+.sw-modal-stats { display: flex; gap: 8px; margin-bottom: 16px; }
+
+.sw-modal-stat {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 4px;
+  background: rgba(0, 0, 0, 0.28);
+  border-radius: 10px;
+}
+
+.sw-modal-value { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sw-modal-gold { color: #f2c43d; }
+
+.sw-modal-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #8b93a3;
+}
+
+.sw-btn {
+  min-height: 46px;
+  padding: 0 22px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sw-btn-primary { background: #a6d8ef; border: none; color: #11212b; font-weight: 700; }
+.sw-btn-primary:hover { filter: brightness(1.07); }
+
+@media (max-width: 699px) {
+  .sw-top-bar { padding: 8px 8px 2px; gap: 8px; }
+  .sw-clue { margin: 4px 10px 0; }
+  .sw-clue-text { font-size: 17px; }
+  .sw-actions { padding: 4px 8px 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sw-overlay, .sw-modal { animation: none; }
+  .sw-hint-fill, .sw-cell { transition: none; }
+}

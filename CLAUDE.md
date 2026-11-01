@@ -1,12 +1,13 @@
 # Israeli-Whist (multi-game card app)
 
-Vite + React 19 + TypeScript card-game suite. Fourteen game modes share a common
+Vite + React 19 + TypeScript card-game suite. Fifteen game modes share a common
 lobby/scoring/multiplayer infrastructure: WhistAchim, Yaniv, Quartets,
 Solitaire, Shithead, Israeli Rummy (Rummikub-style), Backgammon, Checkers,
 Mahjong Solitaire (solo tile matching), Word Wonders (solo word crossword),
 Gem Blocks (solo 9x9 block puzzle), Pips (solo domino-fitting puzzle),
-Woodoku (solo block puzzle), and Escape Room (solo timed puzzle stages).
-Woodoku and Escape Room are currently hidden from the menu.
+Strands (solo themed word search), Woodoku (solo block puzzle), and Escape
+Room (solo timed puzzle stages). Woodoku and Escape Room are currently hidden
+from the menu.
 Multiplayer is built on Firebase Realtime DB; bots run client-side.
 PWA via vite-plugin-pwa.
 
@@ -648,6 +649,89 @@ and replays each generator's own answer through the REAL reducer.
   --log-level=warning && node /tmp/test-pips.mjs
 ```
 
+## Strands (added 2026-11-01)
+
+Solo word game at `src/games/strands/`: a 6x8 grid where every letter belongs
+to exactly one themed word, plus a spangram that crosses the whole board.
+English and Hebrew. Solo only; the multiplayer screen is a stub.
+
+### Why this is a packing problem, not a word problem
+
+There are no crossings — each cell belongs to one word and one word only — so
+letters never have to agree with each other. **Any word can be written along any
+path of its length.** Generating a board therefore reduces to carving the 48
+cells into snaking paths of the right lengths; the words are poured in
+afterwards. Don't reach for a crossword-style solver here.
+
+`packPaths` (`engine/packer.ts`) does the carving:
+
+- The **spangram goes first**, on its own terms. It is the longest word and the
+  only one with a positional rule (touch two opposite edges), so fitting it
+  around the others rarely works. It is walked from one edge with a prune that
+  refuses to wander further from the far edge than there are steps left.
+- Every other path **starts at the first free cell** in row-major order. Any
+  cover has to reach that cell, and committing to it stops the search
+  re-deriving one layout in a dozen orders.
+- After each path, `stillFillable` checks that every connected blob of free
+  cells is a subset-sum of the lengths still unplaced. That one prune is what
+  kills the dead ends.
+
+`eachPath` marks `free` as it descends and unmarks on the way back out —
+**except when the path is accepted**, where the marks are deliberately left in
+place for the caller. Getting that backwards silently frees cells still in use.
+
+### The packer is allowed to fail, and that is the design
+
+Some length sets genuinely cannot be carved out of a 6x8 grid. About 12-17% of
+realistic sets fail, and more search budget barely moves it (248/300 at 400k
+nodes, 253/300 at 5M, with the worst case going from 0.6s to 4.8s). So
+`buildLevel` retries with a **different subset of the theme's words** instead,
+which is cheap and always lands: every shipped theme builds a board in both
+languages. Don't "fix" the failure rate by raising the node cap.
+
+### Themes are pools, not boards
+
+`data/themes-{en,he}.ts` hold a clue, a spangram and 12-23 candidate words each.
+The level builder picks whichever subset's lengths total the free cells exactly
+(capped at 9 words for English, 12 for Hebrew), so one theme yields many
+different boards and a pool only has to be generous, not exact. 24 English
+themes, 18 Hebrew.
+
+A theme fails if its pool cannot reach the target sum — which is how the two
+original Hebrew duds were caught: `body` lost five two-letter words to the
+minimum-length filter and totalled 36 against a target of 41. The regression
+test builds every theme, so this cannot ship unnoticed.
+
+### Hebrew: author the display form, derive the grid form
+
+Theme words are written the way they are READ, final letters and all.
+`gridKey` folds them with `toPlain` (shared with Word Wonders) for the grid,
+because one cell holds one glyph, and the authored string stays as the display
+form. That sidesteps the sofit exception list entirely — no round-tripping.
+The test asserts no final letter ever reaches a Hebrew grid.
+
+Bonus words are checked against the **Word Wonders dictionary**
+(`loadDictionary`), which is already chunked per language. A player who never
+opens a Hebrew board never downloads Hebrew.
+
+### Gotcha: how close the letter discs sit
+
+Two discs of the same word can be neighbours on the grid WITHOUT being
+consecutive in the word, and those two are not joined by a bar. If the discs
+nearly touch, the sliver of background between them reads as a stray arrowhead
+sitting on the word — it looks like a rendering bug and was mistaken for one.
+`DISC` is 0.78 of the cell pitch to keep those gaps unmistakably gaps.
+
+**Regression test:** `scripts/test-strands.mts` builds every theme in both
+languages, checks each board is an exact cover of snaking paths with a real
+spangram, and then plays each board to completion through the REAL reducer by
+tracing its own words.
+```
+./node_modules/.bin/esbuild --bundle scripts/test-strands.mts \
+  --platform=node --format=esm --outfile=/tmp/test-strands.mjs \
+  --log-level=warning && node /tmp/test-strands.mjs
+```
+
 ### Adding a new game (registry + MainMenu wiring)
 
 When adding any new game (not just an archetype here), there are **four** wiring points — miss the fourth and the menu silently launches Yaniv:
@@ -688,4 +772,5 @@ Archetype `hint()` and `validate()` return strings like `'escape.padlock.clue.di
 - Don't ship Word Wonders word lists without the frequency filter, and don't add the raw Hspell lexicon as a dependency (AGPL) — see "Word Wonders" above.
 - Don't replace the Mahjong pair-assignment dealer with a random shuffle — it would deal unfinishable boards (see "Mahjong Solitaire" above).
 - Don't grow the Pips board by carving a shape and hoping it tiles, and don't add a clue kind whose `bad` verdict can later come good — the solver prunes on that being permanent (see "Pips" above).
+- Don't try to drive the Strands packer's failure rate to zero with a bigger node budget — retrying with a different subset of the theme's words is the mechanism, and the budget buys almost nothing (see "Strands" above).
 - Don't naively append in the bot layoff loop. `canLayOff` is true if EITHER append OR prepend yields a valid meld (low-end run extensions like 10♣→[J♣,Q♣,K♣] only work as prepend). Always test both `[...meld.cards, card]` and `[card, ...meld.cards]` against `isValidMeld` and pick the valid arrangement — appending blindly produced positionally-invalid runs and `selfValidateCommit` then reverted the entire turn (the "bots only play sets, never lay off" symptom). Regression: `scripts/test-bot-layoff.mts`.
