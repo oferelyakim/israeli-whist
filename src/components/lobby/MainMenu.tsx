@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { GameType, PlayerType } from '../../types/game-common';
 import { GAME_REGISTRY } from '../../games/registry';
 import type { GameConfig } from '../../games/registry';
 import { CardSetType } from '../../games/quartets/types';
 import { RummyVariant } from '../../games/rummy/types';
+import { GameIcon } from './GameIcon';
 import { useTranslation } from '../../i18n/LanguageContext';
 import type { TranslationKey } from '../../i18n/translations';
 import { isFirebaseConfigured } from '../../multiplayer/firebase-config';
@@ -129,6 +130,32 @@ const BOT_NAME_KEYS = [
 ] as const;
 
 const PLAYER_NAME_STORAGE_KEY = 'whist-player-name';
+const LAST_GAME_STORAGE_KEY = 'whist-last-game';
+
+/**
+ * The game the menu opens on.
+ *
+ * Checked against the registry rather than trusted: a game can be pulled from
+ * the menu between visits (Woodoku and Escape Room both have been), and a
+ * stored id that no longer resolves would crash the header on mount.
+ */
+function loadLastGame(): GameType {
+  try {
+    const stored = localStorage.getItem(LAST_GAME_STORAGE_KEY);
+    if (stored && stored in GAME_REGISTRY) return stored as GameType;
+  } catch {
+    // ignore (private mode, quota, etc.)
+  }
+  return GameType.WHIST;
+}
+
+function saveLastGame(game: GameType): void {
+  try {
+    localStorage.setItem(LAST_GAME_STORAGE_KEY, game);
+  } catch {
+    // ignore (private mode, quota, etc.)
+  }
+}
 
 function loadStoredPlayerName(): string {
   try {
@@ -167,13 +194,22 @@ export function MainMenu({ onStartGame, onCreateRoom, onJoinRoom }: MainMenuProp
   const [showJoin, setShowJoin] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [selectedGame, setSelectedGame] = useState<GameType>(GameType.WHIST);
-  const [numPlayers, setNumPlayers] = useState<number>(GAME_REGISTRY[GameType.YANIV]!.defaultPlayers);
+  const [selectedGame, setSelectedGame] = useState<GameType>(loadLastGame);
+  const [numPlayers, setNumPlayers] = useState<number>(
+    () => GAME_REGISTRY[loadLastGame()]!.defaultPlayers,
+  );
   const [cardSet, setCardSet] = useState<CardSetType>(CardSetType.EMOJI);
   const [rummyVariant, setRummyVariant] = useState<RummyVariant>(RummyVariant.BASIC);
 
   const firebaseReady = checkFirebaseConfigured();
   const gameConfig: GameConfig = GAME_REGISTRY[selectedGame]!;
+
+  // Every launch goes through here, so the menu remembers where the player
+  // was without each of the ten call sites having to.
+  const startGame = useCallback<MainMenuProps['onStartGame']>((gameType, settings) => {
+    saveLastGame(gameType);
+    onStartGame(gameType, settings);
+  }, [onStartGame]);
 
   const handleGameSelect = (gameType: GameType) => {
     setSelectedGame(gameType);
@@ -183,7 +219,7 @@ export function MainMenu({ onStartGame, onCreateRoom, onJoinRoom }: MainMenuProp
 
   const handleSinglePlayer = () => {
     if (SOLO_GAMES.has(selectedGame)) {
-      onStartGame(selectedGame, {
+      startGame(selectedGame, {
         gameType: selectedGame,
         numPlayers: 1,
         playerNames: [playerName],
@@ -199,13 +235,13 @@ export function MainMenu({ onStartGame, onCreateRoom, onJoinRoom }: MainMenuProp
     const types = [PlayerType.HUMAN, ...Array(playerCount - 1).fill(PlayerType.AI)];
 
     if (selectedGame === GameType.WHIST) {
-      onStartGame(GameType.WHIST, {
+      startGame(GameType.WHIST, {
         maxRounds: null,
         playerNames: names,
         playerTypes: types,
       });
     } else if (selectedGame === GameType.QUARTETS) {
-      onStartGame(GameType.QUARTETS, {
+      startGame(GameType.QUARTETS, {
         gameType: GameType.QUARTETS,
         numPlayers: playerCount,
         playerNames: names,
@@ -213,7 +249,7 @@ export function MainMenu({ onStartGame, onCreateRoom, onJoinRoom }: MainMenuProp
         cardSet,
       });
     } else if (selectedGame === GameType.SHITHEAD) {
-      onStartGame(GameType.SHITHEAD, {
+      startGame(GameType.SHITHEAD, {
         gameType: GameType.SHITHEAD,
         numPlayers: playerCount,
         playerNames: names,
@@ -227,7 +263,7 @@ export function MainMenu({ onStartGame, onCreateRoom, onJoinRoom }: MainMenuProp
       const rummyTypes = rummyVariant === RummyVariant.GIN
         ? [PlayerType.HUMAN, PlayerType.AI]
         : types;
-      onStartGame(GameType.RUMMY, {
+      startGame(GameType.RUMMY, {
         gameType: GameType.RUMMY,
         numPlayers: rummyPlayerCount,
         playerNames: rummyNames,
@@ -235,28 +271,28 @@ export function MainMenu({ onStartGame, onCreateRoom, onJoinRoom }: MainMenuProp
         variant: rummyVariant,
       });
     } else if (selectedGame === GameType.ISRAELI_RUMMY) {
-      onStartGame(GameType.ISRAELI_RUMMY, {
+      startGame(GameType.ISRAELI_RUMMY, {
         gameType: GameType.ISRAELI_RUMMY,
         numPlayers: playerCount,
         playerNames: names,
         playerTypes: types,
       });
     } else if (selectedGame === GameType.GIN_RUMMY) {
-      onStartGame(GameType.GIN_RUMMY, {
+      startGame(GameType.GIN_RUMMY, {
         gameType: GameType.GIN_RUMMY,
         numPlayers: 2,
         playerNames: [playerName, BOT_NAME_KEYS.slice(0, 1).map((key) => t(key))[0]],
         playerTypes: [PlayerType.HUMAN, PlayerType.AI],
       });
     } else if (selectedGame === GameType.BACKGAMMON) {
-      onStartGame(GameType.BACKGAMMON, {
+      startGame(GameType.BACKGAMMON, {
         gameType: GameType.BACKGAMMON,
         numPlayers: 2,
         playerNames: [playerName, t('bot.name1')],
         playerTypes: [PlayerType.HUMAN, PlayerType.AI],
       });
     } else if (selectedGame === GameType.CHECKERS) {
-      onStartGame(GameType.CHECKERS, {
+      startGame(GameType.CHECKERS, {
         gameType: GameType.CHECKERS,
         numPlayers: 2,
         playerNames: [playerName, t('bot.name1')],
@@ -264,7 +300,7 @@ export function MainMenu({ onStartGame, onCreateRoom, onJoinRoom }: MainMenuProp
       });
     } else {
       // Yaniv settings with proper defaults
-      onStartGame(GameType.YANIV, {
+      startGame(GameType.YANIV, {
         gameType: GameType.YANIV,
         numPlayers: playerCount,
         playerNames: names,
@@ -292,6 +328,7 @@ export function MainMenu({ onStartGame, onCreateRoom, onJoinRoom }: MainMenuProp
     setError('');
     try {
       const playerCount = selectedGame === GameType.WHIST ? 4 : numPlayers;
+      saveLastGame(selectedGame);
       onCreateRoom(selectedGame, playerCount, playerName);
     } catch (e: any) {
       setError(e.message || 'Failed to create room');
@@ -344,8 +381,10 @@ export function MainMenu({ onStartGame, onCreateRoom, onJoinRoom }: MainMenuProp
               key={config.type}
               className={`game-tab ${selectedGame === config.type ? 'game-tab-active' : ''}`}
               onClick={() => handleGameSelect(config.type)}
+              aria-pressed={selectedGame === config.type}
             >
-              {t(GAME_I18N[config.type].name)}
+              <GameIcon game={config.type} />
+              <span className="game-tab-label">{t(GAME_I18N[config.type].name)}</span>
             </button>
           ))}
         </div>
