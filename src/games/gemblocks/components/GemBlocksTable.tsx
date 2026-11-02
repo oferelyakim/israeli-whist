@@ -14,7 +14,9 @@ const FRAME_PAD = 6;
 const TRAY_CELL = 17;
 const TRAY_GAP = 2;
 /** A dragged piece rides this far above the finger so it stays visible. */
-const DRAG_LIFT = 46;
+/** How far above the finger the held piece floats, as a share of a cell, so
+ *  the lift stays proportional on a phone instead of soaring 1.5 rows up. */
+const DRAG_LIFT_CELLS = 1.1;
 const TAP_SLOP = 8;
 
 function formatClock(totalSeconds: number): string {
@@ -84,6 +86,30 @@ function TrayPiece({ offer, cell, gap = TRAY_GAP }: { offer: OfferedPiece; cell:
       })}
     </div>
   );
+}
+
+/**
+ * The cell of `piece` nearest to (dr, dc).
+ *
+ * A grab can land in a hole of an L or an S, and anchoring from a hole is a
+ * square the shape does not occupy — the piece then reads as hanging off the
+ * finger. Snapping to the closest real cell keeps the grab on the shape.
+ */
+function nearestPieceCell(
+  cells: readonly (readonly [number, number])[],
+  dr: number,
+  dc: number,
+): { dr: number; dc: number } {
+  let best = cells[0];
+  let bestDist = Infinity;
+  for (const cell of cells) {
+    const dist = (cell[0] - dr) ** 2 + (cell[1] - dc) ** 2;
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = cell;
+    }
+  }
+  return { dr: best[0], dc: best[1] };
 }
 
 export interface GemBlocksTableProps {
@@ -182,12 +208,14 @@ export function GemBlocksTable({
     return { row, col };
   }, [cellSize]);
 
+  const dragLift = Math.round(cellSize * DRAG_LIFT_CELLS);
+
   /** Resolves the pointer to a landing square and where that square sits. */
   const resolveAnchor = useCallback((clientX: number, clientY: number) => {
     const grab = grabRef.current;
     const el = boardRef.current;
     if (!grab || !el) return null;
-    const at = cellAt(clientX, clientY - DRAG_LIFT);
+    const at = cellAt(clientX, clientY - Math.round(cellSize * DRAG_LIFT_CELLS));
     if (!at) return null;
     const box = el.getBoundingClientRect();
     const step = cellSize + CELL_GAP;
@@ -204,12 +232,21 @@ export function GemBlocksTable({
 
     // Which cell of the shape was grabbed, so the piece tracks the finger from
     // the point it was picked up rather than snapping its corner to it.
-    const box = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    //
+    // Measure the DRAWN GRID, not the button. The button carries padding and a
+    // 44px minimum tap target, so its box is larger than the shape and sliced
+    // into even thirds it put the grab a row out near a row's edge — the piece
+    // then landed one line off where the player aimed. Reported from play,
+    // 2026-11-02. The grid's own cell pitch is exact, so no fudge is needed.
+    const button = e.currentTarget as HTMLElement;
+    const grid = button.querySelector('.gb-tray-grid');
+    const box = (grid ?? button).getBoundingClientRect();
     const { rows, cols } = pieceSize(offer.piece);
-    const stepX = box.width / cols;
-    const stepY = box.height / rows;
-    const dc = Math.min(cols - 1, Math.max(0, Math.floor((e.clientX - box.left) / stepX)));
-    const dr = Math.min(rows - 1, Math.max(0, Math.floor((e.clientY - box.top) / stepY)));
+    const stepX = (box.width + TRAY_GAP) / cols;
+    const stepY = (box.height + TRAY_GAP) / rows;
+    const rawC = Math.min(cols - 1, Math.max(0, Math.floor((e.clientX - box.left) / stepX)));
+    const rawR = Math.min(rows - 1, Math.max(0, Math.floor((e.clientY - box.top) / stepY)));
+    const { dr, dc } = nearestPieceCell(offer.piece.cells, rawR, rawC);
 
     grabRef.current = { index, dr, dc, x: e.clientX, y: e.clientY };
     movedRef.current = false;
@@ -381,7 +418,7 @@ export function GemBlocksTable({
               ? { left: dragging.snap.left, top: dragging.snap.top }
               : {
                   left: dragging.x - (dragging.dc + 0.5) * (cellSize + CELL_GAP),
-                  top: dragging.y - DRAG_LIFT - (dragging.dr + 0.5) * (cellSize + CELL_GAP),
+                  top: dragging.y - dragLift - (dragging.dr + 0.5) * (cellSize + CELL_GAP),
                 }
           }
           aria-hidden="true"

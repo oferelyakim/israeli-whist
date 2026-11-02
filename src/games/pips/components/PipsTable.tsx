@@ -132,6 +132,8 @@ interface DragState {
   ok: boolean;
   /** Where the ghost sits when it is over a legal square. */
   snap: { left: number; top: number } | null;
+  /** True while a tile held from the board hovers the tray, which drops it. */
+  overTray: boolean;
 }
 
 const DIFFICULTY_CHOICES: ReadonlyArray<{ value: PipsDifficulty; label: 'pips.easy' | 'pips.medium' | 'pips.hard'; tiles: number }> = [
@@ -161,6 +163,7 @@ export function PipsTable({
   const { t } = useTranslation();
   const areaRef = useRef<HTMLDivElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
+  const trayRef = useRef<HTMLDivElement>(null);
   const grabRef = useRef<{ x: number; y: number } | null>(null);
   const [cell, setCell] = useState(44);
   const [drag, setDrag] = useState<DragState | null>(null);
@@ -253,6 +256,7 @@ export function PipsTable({
       anchor: null,
       ok: false,
       snap: null,
+      overTray: false,
     });
   }, [solved]);
 
@@ -286,7 +290,16 @@ export function PipsTable({
         snap = { left: box.left + spot.left, top: box.top + spot.top };
       }
 
-      return { ...current, x: e.clientX, y: e.clientY, moved, anchor, ok, snap };
+      // A tile already on the board can be dragged back down to the tray. Only
+      // that one tile goes back — the Clear button is the way to empty the
+      // board — so the drop is read off the tray's own rect.
+      const trayEl = trayRef.current;
+      const trayBox = trayEl ? trayEl.getBoundingClientRect() : null;
+      const overTray = current.fromBoard && trayBox !== null
+        && e.clientX >= trayBox.left && e.clientX <= trayBox.right
+        && e.clientY >= trayBox.top && e.clientY <= trayBox.bottom;
+
+      return { ...current, x: e.clientX, y: e.clientY, moved, anchor, ok, snap, overTray };
     });
   }, [boardCells, cellAt, faceBox, occupiedExcept]);
 
@@ -302,6 +315,9 @@ export function PipsTable({
     if (current.moved) {
       if (current.anchor && current.ok) {
         onPlace(current.dominoId, current.anchor, current.orientation);
+      } else if (current.overTray) {
+        const placed = placements.find((p) => p.dominoId === current.dominoId);
+        if (placed) onLift(placed.cells[0]);
       }
       return;
     }
@@ -503,7 +519,10 @@ export function PipsTable({
         </div>
       </div>
 
-      <div className="pips-tray">
+      <div
+        ref={trayRef}
+        className={`pips-tray${drag?.overTray && drag.moved ? ' pips-tray-drop' : ''}`}
+      >
         {tray.length === 0 ? (
           <span className="pips-tray-empty">{t('pips.trayEmpty')}</span>
         ) : tray.map((domino) => {

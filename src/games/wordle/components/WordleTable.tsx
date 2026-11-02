@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { MAX_GUESSES, WORD_LENGTH, WordleMode, WordlePhase } from '../types';
 import type { Mark, WordleGameState, WordleLang, WordleStats } from '../types';
 import { normaliseLetter } from '../engine/words';
@@ -45,6 +45,15 @@ export function WordleTable({
   const { lang, mode, guesses, current, keyboard, phase, answer, message, nudge } = gameState;
   const over = phase !== WordlePhase.PLAYING;
 
+  // Which finished board the player has put the result card away for. Holding
+  // the board's identity rather than a bare boolean means a new word brings the
+  // card back on its own, with no effect resetting state (react-x forbids that).
+  const finished = `${mode}:${lang}:${answer}:${guesses.length}`;
+  const [dismissed, setDismissed] = useState<string | null>(null);
+  const showResult = over && dismissed !== finished;
+  const closeResult = useCallback(() => setDismissed(finished), [finished]);
+  const openResult = useCallback(() => setDismissed(null), []);
+
   // Let a note sit long enough to read, then drop it.
   useEffect(() => {
     if (message === '') return;
@@ -62,6 +71,7 @@ export function WordleTable({
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === 'Escape') { if (over) setDismissed(finished); return; }
       if (e.key === 'Enter') { e.preventDefault(); onSubmit(); return; }
       if (e.key === 'Backspace') { e.preventDefault(); onBackspace(); return; }
       if (isLetterOf(lang, e.key)) {
@@ -71,7 +81,7 @@ export function WordleTable({
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [lang, onBackspace, onSubmit, onType]);
+  }, [finished, lang, onBackspace, onSubmit, onType, over]);
 
   /** Six rows: the ones guessed, the one being typed, then empty ones. */
   const rows = useMemo(() => {
@@ -117,13 +127,27 @@ export function WordleTable({
           </button>
         </div>
 
-        <button
-          className="wd-icon-btn wd-lang"
-          onClick={() => onSetLanguage(lang === 'en' ? 'he' : 'en')}
-          aria-label={t('wordle.switchLanguage')}
-        >
-          {lang === 'en' ? 'EN' : 'עב'}
-        </button>
+        <div className="wd-top-right">
+          {over && !showResult && (
+            <button
+              className="wd-icon-btn"
+              onClick={openResult}
+              aria-label={t('wordle.showResult')}
+              title={t('wordle.showResult')}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+              </svg>
+            </button>
+          )}
+          <button
+            className="wd-icon-btn wd-lang"
+            onClick={() => onSetLanguage(lang === 'en' ? 'he' : 'en')}
+            aria-label={t('wordle.switchLanguage')}
+          >
+            {lang === 'en' ? 'EN' : 'עב'}
+          </button>
+        </div>
       </div>
 
       <div className="wd-board-area">
@@ -188,9 +212,14 @@ export function WordleTable({
 
       {loading && <span className="wd-loading-note">{t('wordle.loadingWords')}</span>}
 
-      {over && (
-        <div className="wd-overlay">
-          <div className="wd-modal">
+      {showResult && (
+        <div className="wd-overlay" onClick={closeResult} role="presentation">
+          <div className="wd-modal" onClick={(e) => e.stopPropagation()} role="presentation">
+            <button className="wd-modal-close" onClick={closeResult} aria-label={t('wordle.close')}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
             <h2 className={phase === WordlePhase.WON ? '' : 'wd-modal-lost'}>
               {t(phase === WordlePhase.WON ? 'wordle.won' : 'wordle.lost')}
             </h2>
@@ -221,12 +250,18 @@ export function WordleTable({
                   <button className="wd-btn wd-btn-primary" onClick={() => onSetMode(WordleMode.ENDLESS)}>
                     {t('wordle.playEndless')}
                   </button>
+                  <button className="wd-btn" onClick={closeResult}>
+                    {t('wordle.seeBoard')}
+                  </button>
                 </div>
               </>
             ) : (
               <div className="wd-modal-actions">
                 <button className="wd-btn wd-btn-primary" onClick={onNewEndless}>
                   {t('wordle.newWord')}
+                </button>
+                <button className="wd-btn" onClick={closeResult}>
+                  {t('wordle.seeBoard')}
                 </button>
               </div>
             )}
