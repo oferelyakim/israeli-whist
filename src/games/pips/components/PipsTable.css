@@ -184,6 +184,15 @@
   padding: 6px 10px;
   min-height: 72px;
   flex-shrink: 0;
+  border-radius: 14px;
+  border: 2px dashed transparent;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+/* A tile held from the board over the tray will drop back into it. */
+.pips-tray-drop {
+  background: rgba(96, 165, 250, 0.14);
+  border-color: rgba(96, 165, 250, 0.7);
 }
 
 .pips-tray-btn {

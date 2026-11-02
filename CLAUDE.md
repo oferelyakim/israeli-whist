@@ -551,6 +551,14 @@ Two bugs worth not reintroducing, both found by measuring the rendered DOM:
   must subtract BOTH the board area's own padding and that frame padding
   (`FRAME_PAD`), or the grid is sized to more room than it has and the last
   column is clipped off the right edge of a phone.
+- **The grabbed cell is measured off the drawn grid (`.gb-tray-grid`), not the
+  tray button.** The button carries 8px of padding and a 44px minimum tap
+  target, so its box is bigger than the shape; slicing that box into even
+  rows/columns put the grab one row out near a row's edge and the piece landed
+  a line off where the player aimed. Measured over the rendered DOM: 3-13% of
+  grab points inside a shape were read wrong, which is why it felt intermittent
+  rather than broken. Reported from play, 2026-11-02. A grab that lands in a
+  hole of an L or an S snaps to the nearest real cell (`nearestPieceCell`).
 - **The drag ghost snaps to the landing square** (`dragging.snap`), it does not
   follow the pointer over the board. A free-following ghost drifts up to half a
   cell away from the preview it is supposed to be showing, because the preview
@@ -662,6 +670,14 @@ it crowded a nine-region board into three tints; spreading gives nine or ten.
 palette silently reintroduces the bug. The regression test checks both that
 every multi-cell region is connected and that no two touching regions share a
 colour.
+
+### A placed tile drags back to the tray, one at a time
+
+Tapping a placed tile lifts it; dragging it onto the tray does the same, and the
+tray lights up (`.pips-tray-drop`) while it would. Only the tile being dragged
+goes back - Clear is the way to empty the board - and the hit test is the tray's
+own rect, so a drag that is simply fumbled off the board reverts rather than
+silently removing the tile.
 
 ### Gotcha: badges hang off the board
 
@@ -858,6 +874,18 @@ do, and the keyboard offers exactly the 22 letters — offering a final form
 would let a player type a letter the answer can never contain. The grid and
 keyboard are `dir="rtl"` so the first letter sits on the right; the answer is
 read back through `toDisplay`, which restores the final letter.
+
+### The result card can be put away
+
+The finished-board card closes (X, Escape, a backdrop tap or "See my board") and
+a bar-chart button in the top bar brings it back, because the first cut covered
+the board the player had just spent six guesses on with no way out of it.
+Reported from play, 2026-11-02.
+
+The dismissal is held as the IDENTITY of the finished board
+(`mode:lang:answer:guesses.length`), not a boolean: a new word changes the token
+and the card returns on its own, so no effect resets the state - react-x flags
+`setState` in an effect as a cascading render.
 
 **Regression test:** `scripts/test-wordle.mts` covers the marking rules with
 their reasoning, the keyboard only ever improving, a board played and lost
